@@ -77,6 +77,33 @@ export async function searchPlaylists(
       seen.add(p.slug);
       return true;
     });
+
+    if (results.length === 0) {
+      console.log('[DEBUG] 0 results found (possibly due to API quota or no match). Falling back to popular static templates.');
+      if (apiKey) {
+        const staticIds = Object.values(STATIC_SLUG_MAP);
+        let detailsMap: Record<string, any> = {};
+        try {
+          detailsMap = await getPlaylistDetailsBatch(staticIds, apiKey);
+        } catch (e) {
+          console.error('Failed to resolve static templates details on search fallback:', e);
+        }
+        results = PLAYLISTS.map(p => {
+          const ytId = STATIC_SLUG_MAP[p.slug];
+          const ytDetails = detailsMap[ytId];
+          return {
+            ...p,
+            slug: ytId || p.slug,
+            title: ytDetails?.title || p.title,
+            thumbnail: ytDetails?.thumbnail_url || p.thumbnail,
+            videoCount: ytDetails?.videoCount || p.videoCount,
+            durationHours: ytDetails ? Math.round(ytDetails.videoCount * 0.4) || 2 : p.durationHours
+          };
+        });
+      } else {
+        results = [...PLAYLISTS];
+      }
+    }
   } else {
     // Return all static templates resolved to YouTube IDs
     if (apiKey) {

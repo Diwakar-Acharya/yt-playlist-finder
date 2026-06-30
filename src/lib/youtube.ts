@@ -93,38 +93,63 @@ export async function validatePlaylist(playlistId: string, apiKey: string): Prom
 export async function getPlaylistDetailsBatch(playlistIds: string[], apiKey: string): Promise<Record<string, any>> {
   if (playlistIds.length === 0 || !apiKey) return {};
   try {
-    const idsParam = playlistIds.join(',');
-    const url = `https://www.googleapis.com/youtube/v3/playlists?part=snippet,contentDetails&id=${idsParam}&maxResults=50&key=${apiKey}`;
-    const res = await fetch(url);
-    if (!res.ok) {
-      const errText = await res.text();
-      console.error('YouTube playlist details batch fetch failed:', res.status, errText);
-      return {};
-    }
-    const data = await res.json();
     const results: Record<string, any> = {};
-    if (data.items) {
-      for (const item of data.items) {
-        const id = item.id;
-        const thumbnail = parseThumbnail(item.snippet?.thumbnails);
-        const title = item.snippet?.title || '';
-        
-        // STEP 10 — DEBUG & REJECT
-        console.log('[DEBUG] getPlaylistDetailsBatch:', { playlistId: id, finalURL: buildPlaylistURL(id), thumbnail });
-        if (!id || !thumbnail || !title) {
-          console.log('[DEBUG] Rejected playlist in details batch due to null/undefined/empty fields');
-          continue;
-        }
+    const normalIds = playlistIds.filter(id => !id.startsWith('video_'));
+    const videoIds = playlistIds.filter(id => id.startsWith('video_')).map(id => id.replace('video_', ''));
 
-        results[id] = {
-          playlist_id: id,
-          title,
-          description: item.snippet?.description || '',
-          channel: item.snippet?.channelTitle || 'YouTube Channel',
-          channelId: item.snippet?.channelId || '',
-          thumbnail_url: thumbnail,
-          videoCount: item.contentDetails?.itemCount || 0
-        };
+    if (normalIds.length > 0) {
+      const idsParam = normalIds.join(',');
+      const url = `https://www.googleapis.com/youtube/v3/playlists?part=snippet,contentDetails&id=${idsParam}&maxResults=50&key=${apiKey}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.items) {
+          for (const item of data.items) {
+            const id = item.id;
+            const thumbnail = parseThumbnail(item.snippet?.thumbnails);
+            const title = item.snippet?.title || '';
+            
+            // STEP 10 — DEBUG & REJECT
+            console.log('[DEBUG] getPlaylistDetailsBatch:', { playlistId: id, finalURL: buildPlaylistURL(id), thumbnail });
+            if (!id || !thumbnail || !title) continue;
+
+            results[id] = {
+              playlist_id: id,
+              title,
+              description: item.snippet?.description || '',
+              channel: item.snippet?.channelTitle || 'YouTube Channel',
+              channelId: item.snippet?.channelId || '',
+              thumbnail_url: thumbnail,
+              videoCount: item.contentDetails?.itemCount || 0
+            };
+          }
+        }
+      }
+    }
+
+    if (videoIds.length > 0) {
+      const idsParam = videoIds.join(',');
+      const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${idsParam}&key=${apiKey}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.items) {
+          for (const item of data.items) {
+            const id = item.id;
+            const thumbnail = parseThumbnail(item.snippet?.thumbnails);
+            const title = item.snippet?.title || '';
+            if (!id || !thumbnail || !title) continue;
+            results[`video_${id}`] = {
+              playlist_id: `video_${id}`,
+              title,
+              description: item.snippet?.description || '',
+              channel: item.snippet?.channelTitle || 'YouTube Channel',
+              channelId: item.snippet?.channelId || '',
+              thumbnail_url: thumbnail,
+              videoCount: 1
+            };
+          }
+        }
       }
     }
     return results;
@@ -137,6 +162,28 @@ export async function getPlaylistDetailsBatch(playlistIds: string[], apiKey: str
 // Fetch list of videos inside a playlist
 export async function getPlaylistVideos(playlistId: string, apiKey: string): Promise<VideoItem[]> {
   if (!playlistId || !apiKey) return [];
+  
+  if (playlistId.startsWith('video_')) {
+    const videoId = playlistId.replace('video_', '');
+    const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoId}&key=${apiKey}`;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) return [];
+      const data = await res.json();
+      if (data.items && data.items.length > 0) {
+        const item = data.items[0];
+        return [{
+          id: videoId,
+          title: item.snippet?.title || 'Video Title',
+          duration: '15:00'
+        }];
+      }
+    } catch (e) {
+      return [];
+    }
+    return [];
+  }
+
   try {
     const url = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet,contentDetails&maxResults=50&playlistId=${playlistId}&key=${apiKey}`;
     const res = await fetch(url);
@@ -216,6 +263,27 @@ export async function searchYouTubePlaylists(query: string, apiKey: string, env?
     } catch (err) {
       console.error('YouTube API Search Request failed:', err);
       return [];
+    }
+  }
+
+  if (finalIds.length === 0) {
+    console.log('[DEBUG] No playlists found, falling back to video search');
+    try {
+      const videoUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=video&videoDuration=medium&maxResults=10&q=${encodeURIComponent(query)}&key=${apiKey}`;
+      const videoRes = await fetch(videoUrl);
+      if (videoRes.ok) {
+        const videoData = await videoRes.json();
+        if (videoData.items) {
+          for (const item of videoData.items) {
+            const videoId = item.id?.videoId;
+            if (videoId) {
+              finalIds.push(`video_${videoId}`);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Fallback video search failed:', err);
     }
   }
 
