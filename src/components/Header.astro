@@ -147,10 +147,23 @@ const isActive = (path: string) => {
     });
   }
 
-  // Load streak from localStorage
+  // Load and validate streak from localStorage
   const streakCount = document.getElementById('streak-count');
   if (streakCount) {
+    const todayStr = new Date().toDateString();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toDateString();
+
+    const lastStudy = localStorage.getItem('lastStudyDate');
     let streak = parseInt(localStorage.getItem('streak') || '0', 10);
+
+    if (streak > 0) {
+      if (!lastStudy || (lastStudy !== todayStr && lastStudy !== yesterdayStr)) {
+        streak = 0;
+        localStorage.setItem('streak', '0');
+      }
+    }
     streakCount.textContent = streak.toString();
   }
 </script>

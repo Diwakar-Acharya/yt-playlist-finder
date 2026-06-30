@@ -1,9 +1,14 @@
 import { PLAYLISTS, ROADMAPS, type Playlist, type Roadmap } from './db';
-import { scrapeYouTubePlaylists, scrapeLivePlaylistDetails, generateFallbackPlaylists } from './youtube';
+import { 
+  searchYouTubePlaylists, 
+  getPlaylistDetailsBatch, 
+  getPlaylistVideos, 
+  STATIC_SLUG_MAP 
+} from './youtube';
 
 export interface SearchFilters {
-  duration?: string;   // 'short' (<30h) | 'medium' (30-60h) | 'long' (>60h)
-  language?: string;   // 'English' | 'Hindi / English'
+  duration?: string;   // 'short' (<40h) | 'medium' (40-65h) | 'long' (>65h)
+  language?: string;
   difficulty?: string; // 'Beginner' | 'Intermediate' | 'Advanced'
   searchQuery?: string;
 }
@@ -11,25 +16,61 @@ export interface SearchFilters {
 export async function searchPlaylists(
   query: string = '',
   filters: SearchFilters = {},
-  sort: string = 'best'
+  sort: string = 'best',
+  apiKey: string = '',
+  env?: any
 ): Promise<Playlist[]> {
   let results: Playlist[] = [];
-
   const q = query.trim().toLowerCase();
+
   if (q) {
-    // 1. Fetch live YouTube playlist search results (scraped dynamically, no keys required)
-    const ytResults = await scrapeYouTubePlaylists(q);
-    
-    // 2. Fetch matching static templates
-    const staticResults = PLAYLISTS.filter(p => 
+    // 1. Fetch matching static templates
+    const staticMatches = PLAYLISTS.filter(p => 
       p.title.toLowerCase().includes(q) ||
       p.description.toLowerCase().includes(q) ||
       p.channel.toLowerCase().includes(q) ||
       p.topics.some(t => t.toLowerCase().includes(q))
     );
 
-    // Combine and deduplicate
-    const combined = [...staticResults, ...ytResults];
+    // Map static slugs to their YouTube playlist IDs for direct API resolution
+    const staticPlaylists: Playlist[] = [];
+    if (apiKey && staticMatches.length > 0) {
+      const matchIds = staticMatches.map(p => STATIC_SLUG_MAP[p.slug]).filter(Boolean);
+      if (matchIds.length > 0) {
+        const detailsMap = await getPlaylistDetailsBatch(matchIds, apiKey);
+        staticMatches.forEach((staticItem, idx) => {
+          const ytId = STATIC_SLUG_MAP[staticItem.slug];
+          const ytDetails = detailsMap[ytId];
+          if (ytDetails) {
+            staticPlaylists.push({
+              ...staticItem,
+              slug: ytId, // Use real YouTube playlist ID as slug
+              title: ytDetails.title,
+              thumbnail: ytDetails.thumbnail_url,
+              videoCount: ytDetails.videoCount,
+              durationHours: Math.round(ytDetails.videoCount * 0.4) || 2
+            });
+          } else {
+            // Keep template if API fetch fails, but map slug if possible
+            staticPlaylists.push({
+              ...staticItem,
+              slug: ytId || staticItem.slug
+            });
+          }
+        });
+      }
+    } else {
+      staticPlaylists.push(...staticMatches);
+    }
+
+    // 2. Fetch live YouTube Data API playlists
+    let ytResults: Playlist[] = [];
+    if (apiKey) {
+      ytResults = await searchYouTubePlaylists(q, apiKey, env);
+    }
+
+    // Combine and deduplicate by slug/playlist_id
+    const combined = [...staticPlaylists, ...ytResults];
     const seen = new Set<string>();
     results = combined.filter(p => {
       if (seen.has(p.slug)) return false;
@@ -37,10 +78,28 @@ export async function searchPlaylists(
       return true;
     });
   } else {
-    results = [...PLAYLISTS];
+    // Return all static templates resolved to YouTube IDs
+    if (apiKey) {
+      const staticIds = Object.values(STATIC_SLUG_MAP);
+      const detailsMap = await getPlaylistDetailsBatch(staticIds, apiKey);
+      results = PLAYLISTS.map(p => {
+        const ytId = STATIC_SLUG_MAP[p.slug];
+        const ytDetails = detailsMap[ytId];
+        return {
+          ...p,
+          slug: ytId || p.slug,
+          title: ytDetails?.title || p.title,
+          thumbnail: ytDetails?.thumbnail_url || p.thumbnail,
+          videoCount: ytDetails?.videoCount || p.videoCount,
+          durationHours: ytDetails ? Math.round(ytDetails.videoCount * 0.4) || 2 : p.durationHours
+        };
+      });
+    } else {
+      results = [...PLAYLISTS];
+    }
   }
 
-  // 3. Filters
+  // 3. Apply Filters
   if (filters.difficulty) {
     results = results.filter(p => p.difficulty === filters.difficulty);
   }
@@ -71,32 +130,69 @@ export async function searchPlaylists(
   return results;
 }
 
-export async function getPlaylistBySlug(slug: string): Promise<Playlist | undefined> {
-  // 1. Check static templates list
-  const staticPlaylist = PLAYLISTS.find(p => p.slug === slug);
-  if (staticPlaylist) return staticPlaylist;
+export async function getPlaylistBySlug(slug: string, apiKey: string = '', env?: any): Promise<Playlist | undefined> {
+  if (!slug) return undefined;
 
-  // 2. If it is a real YouTube Playlist ID, scrape metadata & video sequence live
-  if (slug.startsWith('PL') || slug.length > 15) {
-    const liveDetails = await scrapeLivePlaylistDetails(slug);
-    if (liveDetails) return liveDetails;
-  }
+  // Resolve slug if it is mapped to a static playlist
+  const ytId = STATIC_SLUG_MAP[slug] || slug;
 
-  // 3. Check fallback dynamic-yt-
-  if (slug.startsWith('dynamic-yt-')) {
-    const parts = slug.split('-');
-    const indexStr = parts[parts.length - 1];
-    const index = parseInt(indexStr, 10) - 1;
-    const queryParts = parts.slice(2, parts.length - 1);
-    const query = queryParts.join(' ');
+  // Fetch playlist details via official API
+  if (apiKey && (ytId.startsWith('PL') || ytId.length > 10)) {
+    const detailsMap = await getPlaylistDetailsBatch([ytId], apiKey);
+    const details = detailsMap[ytId];
+    if (details) {
+      const videos = await getPlaylistVideos(ytId, apiKey);
+      
+      // Look up static metadata templates for static playlists to keep reviews & roadmaps
+      const staticTemplate = PLAYLISTS.find(p => p.slug === slug || STATIC_SLUG_MAP[p.slug] === ytId);
 
-    const generated = generateFallbackPlaylists(query);
-    if (generated[index]) {
-      return generated[index];
+      const scoreBreakdown = {
+        userReviews: staticTemplate?.scoreBreakdown?.userReviews || 95,
+        completionRate: staticTemplate?.scoreBreakdown?.completionRate || 82,
+        playlistStructure: details.videoCount >= 15 && details.videoCount <= 50 ? 95 : 80,
+        recentActivity: 90,
+        creatorAuthority: staticTemplate?.scoreBreakdown?.creatorAuthority || 88
+      };
+
+      const score = Math.round(
+        scoreBreakdown.userReviews * 0.35 +
+        scoreBreakdown.completionRate * 0.25 +
+        scoreBreakdown.playlistStructure * 0.20 +
+        scoreBreakdown.recentActivity * 0.10 +
+        scoreBreakdown.creatorAuthority * 0.10
+      );
+
+      return {
+        slug: ytId,
+        title: details.title,
+        description: details.description || staticTemplate?.description || `YouTube course playlist from channel "${details.channel}".`,
+        channel: details.channel,
+        channelSubscriberCount: staticTemplate?.channelSubscriberCount || 'Verified YouTube Creator',
+        thumbnail: details.thumbnail_url,
+        score,
+        scoreBreakdown,
+        durationHours: Math.round(details.videoCount * 0.4) || 2,
+        videoCount: details.videoCount,
+        difficulty: staticTemplate?.difficulty || (details.videoCount > 30 ? 'Intermediate' : 'Beginner'),
+        language: staticTemplate?.language || 'English',
+        communityRating: staticTemplate?.communityRating || 4.8,
+        savedCount: staticTemplate?.savedCount || 240,
+        completionPercent: scoreBreakdown.completionRate,
+        freshness: 'Updated recently',
+        topics: staticTemplate?.topics || ['Syllabus overview', 'Practical tutorials', 'Review and conclusions'],
+        missingTopics: staticTemplate?.missingTopics || ['Advanced concepts preview'],
+        reviews: staticTemplate?.reviews || [
+          { name: 'Self Learner', role: 'Student', rating: 5, comment: 'Excellent structured syllabus.', date: '2026-06-25' }
+        ],
+        videos,
+        alternatives: staticTemplate?.alternatives || [],
+        roadmaps: staticTemplate?.roadmaps || ['software-engineer']
+      };
     }
   }
 
-  return undefined;
+  // Fallback to static mock data if API key not present
+  return PLAYLISTS.find(p => p.slug === slug);
 }
 
 export function getRoadmaps(): Roadmap[] {
@@ -107,24 +203,13 @@ export function getRoadmapById(id: string): Roadmap | undefined {
   return ROADMAPS.find(r => r.id === id);
 }
 
-export async function comparePlaylists(slugA: string, slugB: string): Promise<{ playlistA: Playlist; playlistB: Playlist } | undefined> {
-  const playlistA = await getPlaylistBySlug(slugA);
-  const playlistB = await getPlaylistBySlug(slugB);
+export async function comparePlaylists(slugA: string, slugB: string, apiKey: string = ''): Promise<{ playlistA: Playlist; playlistB: Playlist } | undefined> {
+  const playlistA = await getPlaylistBySlug(slugA, apiKey);
+  const playlistB = await getPlaylistBySlug(slugB, apiKey);
   if (playlistA && playlistB) {
     return { playlistA, playlistB };
   }
   return undefined;
-}
-
-export function calculateWeightedScore(breakdown: Playlist['scoreBreakdown']): number {
-  const score = (
-    breakdown.userReviews * 0.35 +
-    breakdown.completionRate * 0.25 +
-    breakdown.playlistStructure * 0.20 +
-    breakdown.recentActivity * 0.10 +
-    breakdown.creatorAuthority * 0.10
-  );
-  return Math.round(score);
 }
 
 export function getCustomPathwayRoadmap(playlist: Playlist): {
@@ -142,7 +227,7 @@ export function getCustomPathwayRoadmap(playlist: Playlist): {
     prerequisite = {
       title: 'Python Programming Basics',
       description: 'Understand core variables, loops, decorators, and basic OOP principles.',
-      slug: 'corey-schafer-python'
+      slug: 'PL-osiE80TeTt2d9bfVyTiXJA-UTHn6WwU' // Use direct ID
     };
   }
 
@@ -153,30 +238,30 @@ export function getCustomPathwayRoadmap(playlist: Playlist): {
   };
 
   if (isBeginner) {
-    if (playlist.slug.includes('python')) {
+    if (playlist.slug.toLowerCase().includes('python') || playlist.slug === 'PL-osiE80TeTt2d9bfVyTiXJA-UTHn6WwU') {
       nextStep = {
         title: 'Machine Learning Deep Dive',
         description: 'Take your Python programming to theoretical AI math and training algorithms.',
-        slug: 'andrew-ng-machine-learning'
+        slug: 'PLkDaE6sCZn6FNC6YRfRQc_FbeQrF8BwGI' // Use direct ID
       };
     } else {
       nextStep = {
         title: 'Algorithms & DSA Interview Prep',
         description: 'Transition from basic syntax to interview-level arrays, loops, and trees.',
-        slug: 'striver-dsa-sheet'
+        slug: 'PLgUwDviBIf0oF6QL8m22w1hIDC1vJ_BHz' // Use direct ID
       };
     }
   } else if (!isAdvanced) {
     nextStep = {
       title: 'Algorithms and Data Structures Masterclass',
       description: 'Master time and space complexity, dynamic programming, and advanced graphs with Abdul Bari.',
-      slug: 'abdul-bari-dsa'
+      slug: 'PLIY8eNdw5tW_zX3OCzX7NJ8bL1p6pWfgG' // Use direct ID
     };
   } else {
     nextStep = {
       title: 'Systems design & scaling frameworks',
       description: 'Examine custom microservices, distributed load balancing, and performance tuning.',
-      slug: 'statquest-machine-learning'
+      slug: 'PLblh5JKOoLUICTaGLRoHQDuF500JJRTJk' // Use direct ID
     };
   }
 

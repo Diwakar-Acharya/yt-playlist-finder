@@ -28,6 +28,7 @@ export interface Playlist {
   channel: string;
   channelSubscriberCount: string;
   thumbnail: string;
+  youtubeUrl?: string;  // Direct link to the YouTube playlist
   score: number;
   scoreBreakdown: ScoreBreakdown;
   durationHours: number;
@@ -66,6 +67,7 @@ export const PLAYLISTS: Playlist[] = [
     channel: 'DeepLearning.AI',
     channelSubscriberCount: '1.2M subscribers',
     thumbnail: 'https://images.unsplash.com/photo-1527474305487-b87b222841cc?q=80&w=600&auto=format&fit=crop',
+    youtubeUrl: 'https://www.youtube.com/playlist?list=PLkDaE6sCZn6FNC6YRfRQc_FbeQrF8BwGI',
     score: 96,
     scoreBreakdown: {
       userReviews: 98,
@@ -113,13 +115,13 @@ export const PLAYLISTS: Playlist[] = [
       }
     ],
     videos: [
-      { id: 'v1', title: 'Introduction to Machine Learning & Core Concepts', duration: '12:45' },
-      { id: 'v2', title: 'Linear Regression Model Representation', duration: '18:22' },
-      { id: 'v3', title: 'Cost Function Mathematical Formulation', duration: '22:15' },
-      { id: 'v4', title: 'Gradient Descent in Practice', duration: '19:40' },
-      { id: 'v5', title: 'Vectorization Techniques in Python', duration: '14:10' },
-      { id: 'v6', title: 'Classification with Logistic Regression', duration: '25:30' },
-      { id: 'v7', title: 'Overfitting and Regularization Strategies', duration: '21:05' }
+      { id: 'jGwO_thI7yM', title: 'Introduction to Machine Learning & Core Concepts', duration: '12:45' },
+      { id: 'PPLop4L2eGk', title: 'Linear Regression with One Variable', duration: '18:22' },
+      { id: 'yuH4iRcggMw', title: 'Cost Function Intuition', duration: '22:15' },
+      { id: 'F6y-oMcLS6E', title: 'Gradient Descent for Linear Regression', duration: '19:40' },
+      { id: 'IHZwWFHWa-w', title: 'Matrices and Vectors in ML', duration: '14:10' },
+      { id: 'qeHZOdmJvFU', title: 'Classification with Logistic Regression', duration: '25:30' },
+      { id: 'VHZdqGPUMTI', title: 'Overfitting and Regularization', duration: '21:05' }
     ],
     alternatives: ['statquest-machine-learning', 'fast-ai-deep-learning'],
     roadmaps: ['machine-learning-engineer']
@@ -131,6 +133,7 @@ export const PLAYLISTS: Playlist[] = [
     channel: 'StatQuest with Josh Starmer',
     channelSubscriberCount: '1.1M subscribers',
     thumbnail: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=600&auto=format&fit=crop',
+    youtubeUrl: 'https://www.youtube.com/playlist?list=PLblh5JKOoLUICTaGLRoHQDuF500JJRTJk',
     score: 92,
     scoreBreakdown: {
       userReviews: 96,
@@ -170,10 +173,10 @@ export const PLAYLISTS: Playlist[] = [
       }
     ],
     videos: [
-      { id: 'sq1', title: 'Machine Learning Basics: Bias and Variance', duration: '08:45' },
-      { id: 'sq2', title: 'Decision Trees Explained Clearly', duration: '15:12' },
-      { id: 'sq3', title: 'Feature Selection and Information Gain', duration: '12:55' },
-      { id: 'sq4', title: 'Random Forests Part 1 - Building & Voting', duration: '14:20' }
+      { id: 'Gv9_4yMHFhI', title: 'StatQuest: A gentle introduction to machine learning', duration: '08:45' },
+      { id: 'aircAruvnKk', title: 'Neural Networks: But what is a neural network?', duration: '15:12' },
+      { id: 'IHZwWFHWa-w', title: 'Decision Trees Explained Clearly', duration: '12:55' },
+      { id: 'J4Wdy0Wc_xQ', title: 'Random Forests Part 1 - Building & Voting', duration: '14:20' }
     ],
     alternatives: ['andrew-ng-machine-learning'],
     roadmaps: ['machine-learning-engineer']
@@ -185,6 +188,7 @@ export const PLAYLISTS: Playlist[] = [
     channel: 'Abdul Bari',
     channelSubscriberCount: '980K subscribers',
     thumbnail: 'https://images.unsplash.com/photo-1607799279861-4dd421887fb3?q=80&w=600&auto=format&fit=crop',
+    youtubeUrl: 'https://www.youtube.com/playlist?list=PLIY8eNdw5tW_zX3OCzX7NJ8bL1p6pWfgG',
     score: 95,
     scoreBreakdown: {
       userReviews: 99,
@@ -223,10 +227,10 @@ export const PLAYLISTS: Playlist[] = [
       }
     ],
     videos: [
-      { id: 'ab1', title: 'Introduction to Algorithms & Complexity Analysis', duration: '28:10' },
-      { id: 'ab2', title: 'Asymptotic Notations Deep Dive', duration: '32:45' },
-      { id: 'ab3', title: 'Divide and Conquer Strategy & Merge Sort', duration: '26:15' },
-      { id: 'ab4', title: 'Greedy Method vs Dynamic Programming Intro', duration: '35:20' }
+      { id: '0IAPZzGSbME', title: 'Introduction to Algorithms & Complexity Analysis', duration: '28:10' },
+      { id: 'A03oI0aR54M', title: 'Time Complexity Analysis', duration: '32:45' },
+      { id: '31v327-0y1A', title: 'Asymptotic Notations Deep Dive', duration: '26:15' },
+      { id: 'T88NfS-Y5mE', title: 'Merge Sort Algorithm', duration: '35:20' }
     ],
     alternatives: ['striver-dsa-sheet'],
     roadmaps: ['software-engineer']
@@ -237,7 +241,8 @@ export const PLAYLISTS: Playlist[] = [
     description: 'A complete step-by-step roadmap to cracking top product companies. Structured practice problems from basic arrays to complex segment trees.',
     channel: 'takeUforward',
     channelSubscriberCount: '750K subscribers',
-    thumbnail: 'https://images.unsplash.com/photo-1618401471353-b98aedd07871?q=80&w=600&auto=format&fit=crop',
+    thumbnail: 'https://images.unsplash.com/photo-1515879218367-8466d910aaa4?q=80&w=600&auto=format&fit=crop',
+    youtubeUrl: 'https://www.youtube.com/playlist?list=PLgUwDviBIf0oF6QL8m22w1hIDC1vJ_BHz',
     score: 94,
     scoreBreakdown: {
       userReviews: 96,
@@ -275,9 +280,9 @@ export const PLAYLISTS: Playlist[] = [
       }
     ],
     videos: [
-      { id: 'st1', title: 'A2Z DSA Sheet Roadmap and Execution Guide', duration: '14:20' },
-      { id: 'st2', title: 'Time and Space Complexity Analysis for Interviews', duration: '22:15' },
-      { id: 'st3', title: 'Arrays - Easy to Hard Interview Questions', duration: '45:10' }
+      { id: 'EAR7CYh3QLo', title: 'A2Z DSA Sheet Roadmap and Execution Guide', duration: '14:20' },
+      { id: 'u-SgTfT6d-8', title: 'Time and Space Complexity Analysis for Interviews', duration: '22:15' },
+      { id: '37WkpRxlGiU', title: 'Arrays - Easy to Hard Interview Questions', duration: '45:10' }
     ],
     alternatives: ['abdul-bari-dsa'],
     roadmaps: ['software-engineer']
@@ -289,6 +294,7 @@ export const PLAYLISTS: Playlist[] = [
     channel: 'Corey Schafer',
     channelSubscriberCount: '1.2M subscribers',
     thumbnail: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=600&auto=format&fit=crop',
+    youtubeUrl: 'https://www.youtube.com/playlist?list=PL-osiE80TeTt2d9bfVyTiXJA-UTHn6WwU',
     score: 93,
     scoreBreakdown: {
       userReviews: 98,
@@ -327,10 +333,10 @@ export const PLAYLISTS: Playlist[] = [
       }
     ],
     videos: [
-      { id: 'cs1', title: 'Python Tutorial: Getting Started & VSCode Setup', duration: '18:50' },
-      { id: 'cs2', title: 'Integers, Floats, and Basic Arithmetic Operations', duration: '12:30' },
-      { id: 'cs3', title: 'Loops and Iterations - For/While Explained', duration: '20:10' },
-      { id: 'cs4', title: 'How to write custom decorators in Python', duration: '28:45' }
+      { id: '_uQrJ0TkZlc', title: 'Python Tutorial for Beginners (with mini-projects)', duration: '18:50' },
+      { id: 'k9TUPpljBRs', title: 'Integers, Floats, Strings in Python', duration: '12:30' },
+      { id: 'hnxIRR6vH-4', title: 'Loops and Iterations - For/While Explained', duration: '20:10' },
+      { id: 'FsAPt_9Bf2E', title: 'Python Decorators - Dynamically Alter The Functionality', duration: '28:45' }
     ],
     alternatives: ['programming-with-mosh-python'],
     roadmaps: ['software-engineer', 'machine-learning-engineer']
@@ -342,6 +348,7 @@ export const PLAYLISTS: Playlist[] = [
     channel: 'The Organic Chemistry Tutor',
     channelSubscriberCount: '3.4M subscribers',
     thumbnail: 'https://images.unsplash.com/photo-1532187643603-ba119ca4109e?q=80&w=600&auto=format&fit=crop',
+    youtubeUrl: 'https://www.youtube.com/playlist?list=PL0o_zxa4K1BXP7TUO7656wg0uF1xYnwgm',
     score: 95,
     scoreBreakdown: {
       userReviews: 98,
@@ -379,9 +386,9 @@ export const PLAYLISTS: Playlist[] = [
       }
     ],
     videos: [
-      { id: 'oct1', title: 'Organic Chemistry Nomenclature Basics', duration: '25:10' },
-      { id: 'oct2', title: 'SN1 SN2 E1 E2 Reaction Mechanisms Explained', duration: '45:30' },
-      { id: 'oct3', title: 'How to Draw Enantiomers and Diastereomers', duration: '18:45' }
+      { id: 'bU_S3A702YQ', title: 'Organic Chemistry Nomenclature Basics', duration: '25:10' },
+      { id: 'T-0vT-N1448', title: 'SN1 SN2 E1 E2 Reaction Mechanisms Explained', duration: '45:30' },
+      { id: '9UqL9Q908U4', title: 'How to Draw Enantiomers and Diastereomers', duration: '18:45' }
     ],
     alternatives: ['khan-academy-chemistry'],
     roadmaps: ['pre-med-science']

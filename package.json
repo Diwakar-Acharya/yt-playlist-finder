@@ -9,9 +9,11 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "generate-types": "wrangler types"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "^14.0.1",
     "@astrojs/node": "^11.0.0",
     "@lucide/astro": "^1.22.0",
     "@tailwindcss/vite": "^4.3.2",

@@ -1,7 +1,9 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
+import PlaylistCard from '../../../components/PlaylistCard.astro';
 import { searchPlaylists } from '../../../lib/api';
-import { Sparkles, Play, Award, Layers, Clock, ExternalLink } from '@lucide/astro';
+import { getCloudflareEnv } from '../../../lib/youtube';
+import { Sparkles, Award, Layers } from '@lucide/astro';
 
 const { topic } = Astro.params;
 if (!topic) {
@@ -11,8 +13,11 @@ if (!topic) {
 const cleanTopic = topic.trim().replace(/-/g, ' ');
 const titleCaseTopic = cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1);
 
+const env = await getCloudflareEnv();
+const apiKey = env?.YOUTUBE_API_KEY || import.meta.env.YOUTUBE_API_KEY || '';
+
 // Fetch playlists dynamically (queries both database and YouTube live scraper)
-const playlists = await searchPlaylists(cleanTopic);
+const playlists = await searchPlaylists(cleanTopic, {}, 'best', apiKey, env);
 
 // Schema Breadcrumbs & List Items for SEO crawlers
 const breadcrumbSchema = {
@@ -52,28 +57,23 @@ const playlistListSchema = {
     "name": p.title
   }))
 };
-
-const getDifficultyBadge = (diff: string) => {
-  if (diff === 'Beginner') return 'border-emerald-500/20 text-emerald-400 bg-emerald-950/10';
-  if (diff === 'Intermediate') return 'border-yellow-500/20 text-yellow-400 bg-yellow-950/10';
-  return 'border-red-500/20 text-red-400 bg-red-950/10';
-};
 ---
 
 <Layout 
-  title={`Best ${titleCaseTopic} YouTube Playlists (Ranked & Scored) | youtubeplaylistfinder`}
-  description={`Find and search the best study and educational YouTube playlists for learning ${titleCaseTopic}. View Quality Scores, video counts, reviews, and dynamic roadmaps.`}
+  title={`Best YouTube Playlists for ${titleCaseTopic} - ranked courses | youtubeplaylistfinder`}
+  description={`Discover mathematically ranked and graded YouTube playlists for learning ${titleCaseTopic}. Access direct links, structured roadmaps, and student reviews.`}
   canonical={`https://youtubeplaylistfinder.com/topic/${topic}`}
   schema={[breadcrumbSchema, playlistListSchema]}
 >
-  <div class="space-y-12">
-    <!-- Top breadcrumb navigation and segment buttons -->
+  <div class="space-y-8">
+    
+    <!-- Topic Segment Header -->
     <section class="border-b border-white/5 pb-6">
-      <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <span class="text-[10px] font-mono uppercase tracking-wider text-text-muted">Topic Index / Syllabus</span>
-          <h1 class="text-3xl font-bold tracking-tight text-white mt-1">Best {titleCaseTopic} YouTube Playlists</h1>
-          <p class="text-xs text-text-secondary mt-1">Discover structured video courses mathematically ranked by quality scores, community reviews, and learning efficiency.</p>
+          <span class="text-[10px] font-mono uppercase tracking-wider text-text-muted font-semibold">Learning Topic</span>
+          <h1 class="text-3xl font-bold tracking-tight text-white mt-1">{titleCaseTopic} Study Tracks</h1>
+          <p class="text-xs text-text-secondary mt-1">Syllabus-mapped study paths to learn {cleanTopic} from scratch.</p>
         </div>
         
         <!-- Segment routes links for internal SEO link juice -->
@@ -101,54 +101,7 @@ const getDifficultyBadge = (diff: string) => {
         </div>
       ) : (
         playlists.map(playlist => (
-          <div class="group glass-panel rounded-2xl overflow-hidden glass-panel-hover flex flex-col justify-between h-full relative">
-            <div class="relative w-full aspect-video overflow-hidden border-b border-white/5 bg-zinc-950">
-              <img src={playlist.thumbnail} alt={playlist.title} class="w-full h-full object-cover opacity-75 group-hover:scale-105 group-hover:opacity-90 transition-all duration-300" />
-              <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
-              
-              <div class="absolute bottom-3 left-3 flex items-center gap-2 z-10">
-                <span class="px-2.5 py-0.5 rounded-full bg-black/75 border border-white/5 text-[10px] font-mono text-white flex items-center gap-1">
-                  {playlist.videoCount} videos
-                </span>
-                <span class="px-2.5 py-0.5 rounded-full bg-black/75 border border-white/5 text-[10px] font-mono text-white flex items-center gap-1">
-                  {playlist.durationHours} hours
-                </span>
-              </div>
-            </div>
-
-            <div class="p-6 flex-1 flex flex-col justify-between">
-              <div>
-                <a href={`/creator/${encodeURIComponent(playlist.channel)}`} class="text-[10px] font-mono uppercase tracking-wider text-zinc-500 hover:text-white transition-colors">{playlist.channel}</a>
-                <h2 class="text-base font-bold tracking-tight text-white line-clamp-2 mt-1 leading-snug group-hover:text-accent transition-colors">
-                  <a href={`/playlist/${playlist.slug}`}>{playlist.title}</a>
-                </h2>
-                <p class="text-xs text-zinc-400 line-clamp-2 leading-relaxed mt-2 mb-4">{playlist.description}</p>
-              </div>
-
-              <div class="border-t border-white/5 pt-4 flex items-center justify-between">
-                <!-- Score Indicator -->
-                <div class="flex items-center gap-2">
-                  <div class="w-8 h-8 rounded-full border border-accent/20 bg-accent/5 flex items-center justify-center font-mono font-bold text-xs text-white">
-                    {playlist.score}
-                  </div>
-                  <div class="flex flex-col">
-                    <span class="text-[8px] uppercase tracking-wider text-accent font-semibold font-mono">Score</span>
-                    <span class="text-[10px] text-zinc-500 leading-none">Quality</span>
-                  </div>
-                </div>
-
-                <span class={`text-[9px] uppercase px-2 py-0.5 rounded border ${getDifficultyBadge(playlist.difficulty)}`}>
-                  {playlist.difficulty}
-                </span>
-              </div>
-            </div>
-
-            <div class="px-6 pb-6 pt-2 flex gap-3">
-              <a href={`/playlist/${playlist.slug}`} class="flex-1 py-2 px-4 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-lg text-center">
-                Start Learning
-              </a>
-            </div>
-          </div>
+          <PlaylistCard playlist={playlist} />
         ))
       )}
     </div>

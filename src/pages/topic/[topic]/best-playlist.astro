@@ -1,6 +1,7 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
 import { searchPlaylists, getPlaylistBySlug } from '../../../lib/api';
+import { getChannelUrl } from '../../../lib/youtube';
 import { Award, ArrowLeft, Play, Bookmark, CheckCircle2, ChevronRight, HelpCircle } from '@lucide/astro';
 
 const { topic } = Astro.params;
@@ -41,7 +42,7 @@ const courseSchema = hydratedPlaylist ? {
   "provider": {
     "@type": "Organization",
     "name": hydratedPlaylist.channel,
-    "sameAs": `https://youtubeplaylistfinder.com/creator/${encodeURIComponent(hydratedPlaylist.channel)}`
+    "sameAs": getChannelUrl(hydratedPlaylist.channel)
   }
 } : null;
 
@@ -108,7 +109,7 @@ if (courseSchema) activeSchemas.push(courseSchema as any);
             </p>
 
             <div class="flex flex-wrap items-center gap-4 text-xs font-mono text-text-muted pt-2">
-              <span>Channel: <strong class="text-white">{hydratedPlaylist.channel}</strong></span>
+              <span>Channel: <a href={getChannelUrl(hydratedPlaylist.channel)} target="_blank" rel="noopener noreferrer" class="text-white hover:text-accent transition-colors underline inline-flex items-center gap-0.5 font-bold">{hydratedPlaylist.channel}</a></span>
               <span>•</span>
               <span>{hydratedPlaylist.videoCount} Lectures</span>
               <span>•</span>

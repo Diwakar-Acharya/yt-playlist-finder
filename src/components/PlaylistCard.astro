@@ -2,6 +2,7 @@
 import type { Playlist } from '../lib/db';
 import ScoreIndicator from './ScoreIndicator.astro';
 import { Play, Bookmark, Clock, BookOpen, Star, ExternalLink } from '@lucide/astro';
+import { getChannelUrl } from '../lib/youtube';
 
 interface Props {
   playlist: Playlist;
@@ -17,9 +18,10 @@ const { playlist } = Astro.props;
   <!-- Card Header Image/Thumbnail -->
   <div class="relative w-full aspect-video overflow-hidden border-b border-white/5 bg-zinc-950">
     <img 
-      src={playlist.thumbnail} 
+      src={`/api/image?url=${encodeURIComponent(playlist.thumbnail)}`} 
       alt={playlist.title} 
       loading="lazy"
+      decoding="async"
       class="w-full h-full object-cover opacity-75 group-hover:scale-105 group-hover:opacity-90 transition-all duration-300"
     />
     <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
@@ -49,9 +51,14 @@ const { playlist } = Astro.props;
     <div>
       <div class="flex items-start justify-between gap-4 mb-2">
         <div class="flex flex-col">
-          <span class="text-[10px] font-mono uppercase tracking-wider text-text-muted">
-            {playlist.channel}
-          </span>
+          <a 
+            href={getChannelUrl(playlist.channel)}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-[10px] font-mono uppercase tracking-wider text-text-muted hover:text-white transition-colors inline-flex items-center gap-0.5"
+          >
+            {playlist.channel} <ExternalLink class="w-2.5 h-2.5" />
+          </a>
           <h3 class="text-base font-bold tracking-tight text-white line-clamp-2 mt-1 leading-snug group-hover:text-accent transition-colors">
             {playlist.title}
           </h3>
@@ -89,9 +96,17 @@ const { playlist } = Astro.props;
   <div class="px-6 pb-6 pt-2 flex gap-3">
     <a 
       href={`/playlist/${playlist.slug}`} 
-      class="flex-1 py-2 px-4 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold flex items-center justify-center gap-1.5 shadow-lg active:scale-[0.98] transition-all"
+      class="flex-1 py-2 px-3 rounded-xl bg-zinc-900 border border-white/10 hover:bg-zinc-800 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all text-center"
     >
-      <Play class="w-3.5 h-3.5 fill-black" /> View Breakdown
+      Breakdown
+    </a>
+    <a 
+      href={`/go/${playlist.slug}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="flex-1 py-2 px-3 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold flex items-center justify-center gap-1.5 shadow-lg active:scale-[0.98] transition-all text-center"
+    >
+      <Play class="w-3.5 h-3.5 fill-black" /> YouTube <ExternalLink class="w-3 h-3" />
     </a>
   </div>
 </div>

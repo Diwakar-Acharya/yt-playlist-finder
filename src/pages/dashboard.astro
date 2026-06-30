@@ -128,6 +128,41 @@ import { Layers, Bookmark, Flame, Play, Clock, Sparkles, Plus, BookOpen, CheckCi
 
 <script is:inline define:vars={{ PLAYLISTS }}>
   document.addEventListener('DOMContentLoaded', () => {
+    function escapeHTML(str: string): string {
+      if (!str) return '';
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function getChannelUrl(channelName: string): string {
+      if (!channelName) return 'https://www.youtube.com';
+      const normalized = channelName.trim().toLowerCase();
+      const knownChannels: Record<string, string> = {
+        'deeplearning.ai': 'https://www.youtube.com/@Deeplearningai',
+        'statquest with josh starmer': 'https://www.youtube.com/@statquest',
+        'abdul bari': 'https://www.youtube.com/@abdul_bari',
+        'takeuforward': 'https://www.youtube.com/@takeUforward',
+        'corey schafer': 'https://www.youtube.com/@CoreyMSchafer',
+        'the organic chemistry tutor': 'https://www.youtube.com/@TheOrganicChemistryTutor',
+        'freecodecamp.org': 'https://www.youtube.com/@freecodecamp',
+        'programming with mosh': 'https://www.youtube.com/@programmingwithmosh',
+        'techworld with nana': 'https://www.youtube.com/@TechWorldwithNana',
+        'the net ninja': 'https://www.youtube.com/@NetNinja',
+        'traversy media': 'https://www.youtube.com/@TraversyMedia',
+        'dave gray': 'https://www.youtube.com/@DaveGrayTeachesCode',
+        'hussein nasser': 'https://www.youtube.com/@HusseinNasser',
+        'arjancodes': 'https://www.youtube.com/@ArjanCodes'
+      };
+      if (knownChannels[normalized]) {
+        return knownChannels[normalized];
+      }
+      return `https://www.youtube.com/results?search_query=${encodeURIComponent(channelName)}`;
+    }
+
     const grid = document.getElementById('saved-playlists-grid');
     const emptyState = document.getElementById('saved-empty-state');
     const countLabel = document.getElementById('saved-count-label');
@@ -219,12 +254,19 @@ import { Layers, Bookmark, Flame, Play, Clock, Sparkles, Plus, BookOpen, CheckCi
               </div>
             </div>
 
-            <div class="p-6 flex-1 flex flex-col justify-between">
-              <div>
-                <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500">${playlist.channel}</span>
-                <h3 class="text-base font-bold tracking-tight text-white line-clamp-2 mt-1 leading-snug group-hover:text-accent transition-colors">${playlist.title}</h3>
-                <p class="text-xs text-zinc-400 line-clamp-2 leading-relaxed mt-2 mb-4">${playlist.description}</p>
-              </div>
+              <div class="p-6 flex-1 flex flex-col justify-between">
+                <div>
+                  <a 
+                    href="${getChannelUrl(playlist.channel)}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-[10px] font-mono uppercase tracking-wider text-zinc-500 hover:text-white transition-colors inline-flex items-center gap-0.5"
+                  >
+                    ${escapeHTML(playlist.channel)} <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                  </a>
+                  <h3 class="text-base font-bold tracking-tight text-white line-clamp-2 mt-1 leading-snug group-hover:text-accent transition-colors">${escapeHTML(playlist.title)}</h3>
+                  <p class="text-xs text-zinc-400 line-clamp-2 leading-relaxed mt-2 mb-4">${escapeHTML(playlist.description)}</p>
+                </div>
 
               <div class="border-t border-white/5 pt-4 flex items-center justify-between">
                 <!-- Simple Score Indicator -->

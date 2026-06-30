@@ -1,7 +1,8 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import PlaylistCard from '../components/PlaylistCard.astro';
-import { PLAYLISTS } from '../lib/db';
+import { searchPlaylists } from '../lib/api';
+import { getCloudflareEnv } from '../lib/youtube';
 import { 
   Search, 
   ArrowRight, 
@@ -15,8 +16,25 @@ import {
   Cpu
 } from '@lucide/astro';
 
-// Render a few editor-picked playlists statically on first load as fallbacks
-const trendingKeywords = ['Machine Learning', 'DSA', 'Python', 'UPSC', 'Organic Chemistry'];
+// Parse query params in Astro frontmatter (Server-Side)
+const url = new URL(Astro.request.url);
+const query = url.searchParams.get('q') || '';
+const difficulty = url.searchParams.get('difficulty') || '';
+const duration = url.searchParams.get('duration') || '';
+const sort = url.searchParams.get('sort') || 'best';
+
+const env = await getCloudflareEnv();
+const apiKey = env?.YOUTUBE_API_KEY || import.meta.env.YOUTUBE_API_KEY || '';
+
+// Fetch results on server (No client-side fetching)
+const playlists = query 
+  ? await searchPlaylists(query, { difficulty, duration }, sort, apiKey, env)
+  : [];
+
+// Fetch editor picks resolved to YouTube IDs
+const editorPicks = await searchPlaylists('', {}, 'best', apiKey, env);
+
+const trendingKeywords = ['Machine Learning', 'DSA', 'Python', 'Web Dev', 'Docker'];
 
 const categories = [
   { name: 'Machine Learning', count: 3, slug: 'Machine Learning' },
@@ -28,83 +46,11 @@ const categories = [
 const faqs = [
   {
     q: "How to find the best YouTube playlist for any topic?",
-    a: "To find the best YouTube playlist for any topic, use our specialized youtube playlist finder. Enter your search query at the top of the page, and our system will dynamically query YouTube. It compiles matching channels and parses their outlines. We mathematically rank the results based on quality scores, playlist structure, community reviews, creator authority, and completion rates. This allows you to skip low-quality courses and start learning with the most structured pathway instantly."
+    a: "To find the best YouTube playlist for any topic, enter your search query at the top of the page. Our system calls the official YouTube Data API v3 and calculates structured scoring algorithms, helping you locate high-quality courses instantly."
   },
   {
     q: "What is YouTube Playlist Finder?",
-    a: "YouTube Playlist Finder is an educational catalog platform designed to resolve tutorial decision fatigue. Instead of presenting standalone videos, it crawls, scores, and lists complete learning playlists. Each track is graded out of 100 based on structure, subscriber trust, and freshness. This ensures self-learners, developers, and students discover structured online course playlists and tutorial sequences to master topics from A to Z without distraction."
-  },
-  {
-    q: "How does playlist ranking work?",
-    a: "Our playlist ranking algorithm processes five core trust signals: User Reviews (35%), Completion Rate (25%), Playlist Structure (20%), Recent Activity (10%), and Creator Authority (10%). We audit the video count to penalize bloated tracks. We review user testimonials to check explanation clarity. We verify when the author last uploaded changes. The final Quality Score helps you identify the highest-rated study playlists."
-  },
-  {
-    q: "How do you recommend the best study playlist?",
-    a: "We recommend the best study playlists by comparing syllabus coverage across channels. Our compare engine analyzes unique and shared modules. It checks for detected missing topics. When you select a playlist, we also generate a custom learning path. This includes recommended prerequisite basics and logical advanced next steps. This helps you build a cohesive, long-term learning journey rather than viewing scattered clips."
-  },
-  {
-    q: "Can I search YouTube playlists by topic?",
-    a: "Yes, you can search YouTube playlists by any topic on our platform. Our query engine connects to the YouTube database to locate relevant channels. It extracts course syllabi dynamically. You can filter results by difficulty level (Beginner, Intermediate, Advanced) and estimated study duration (Short courses, mid-length tracks, or comprehensive tutorials) to find the exact educational playlist matching your study requirements."
-  },
-  {
-    q: "How do I find educational playlists on YouTube?",
-    a: "To find educational playlists on YouTube, enter your subject in our search bar. Our youtube playlist finder indexes channels like freeCodeCamp, Programming with Mosh, and Strivers DSA. It filters out non-educational content. This gives you a clean list of structured classes. Each playlist shows the creator subscriber counts, video checklist totals, and estimated study duration hours so you can choose wisely."
-  },
-  {
-    q: "What makes a playlist high quality?",
-    a: "A high-quality educational playlist features a cohesive, chronological progression of concepts. It starts with environment setups, builds through core modules, and finishes with advanced scaling exercises. It should have clear audio, verified reviews, and recent updates. Excellent playlists avoid redundant videos. They provide clear checklists. This helps students complete the entire curriculum and maintain their daily learning streaks."
-  },
-  {
-    q: "How can beginners choose the right playlist?",
-    a: "Beginners can choose the right playlist by checking the difficulty tag on our listings. We categorize courses into Beginner, Intermediate, and Advanced tracks. Beginners should select courses with high structure scores and shorter durations. Look for checklists that cover basics first, and use our dynamic roadmaps to identify if you need to complete any prerequisite courses before starting."
-  },
-  {
-    q: "Can I compare two YouTube playlists?",
-    a: "Yes, our AI Compare Engine allows you to overlay any two playlists side-by-side. You can select courses from your recently visited list in localStorage. The compare tool analyzes syllabus coverage, detailing shared topics, unique modules, and missing chapters. It maps their Quality Score breakdowns. This helps you select the absolute best curriculum for your specific educational goals."
-  },
-  {
-    q: "What is the best playlist for learning programming?",
-    a: "The best playlist for learning programming depends on your target language and level. For Python, Corey Schafer's full course is highly rated. For Data Structures and Algorithms (DSA), Abdul Bari's masterclass and Striver's A2Z sheet score the highest. Our platform ranks these playlists above others because of their structured lesson timelines, comprehensive topics lists, and outstanding community reviews."
-  },
-  {
-    q: "How do I create a playlist on YouTube?",
-    a: "To create a playlist on YouTube, open the YouTube website or app. Find a video you wish to save, click the 'Save' button below it, and select 'Create new playlist'. Give your playlist a descriptive name (like 'Python study track'), set the privacy settings (Public, Unlisted, or Private), and click 'Create'. You can then add more learning videos to build your syllabus."
-  },
-  {
-    q: "How do I make a playlist on YouTube?",
-    a: "Making a playlist on YouTube involves saving tutorials to a custom folder. Click the three-dots icon next to any study video, choose 'Save to playlist', and click 'Create new playlist'. Input a title that describes your educational topic, select public or private visibility, and click 'Create'. You can then organize, reorder, and compile videos in your YouTube Library."
-  },
-  {
-    q: "How do I create a YouTube playlist?",
-    a: "To create a YouTube playlist, navigate to your YouTube dashboard or account. While watching a tutorial, click the 'Save' icon below the player, select 'Create new playlist', input a title, and define the visibility. This creates a folder in your library. You can add more educational videos to this folder, reorder them chronologically, and share the link with other online students."
-  },
-  {
-    q: "How do I make a YouTube playlist?",
-    a: "You can make a YouTube playlist by saving a collection of tutorials. Below any video, tap the 'Save' button, select 'Create new playlist', type a name like 'Docker Bootcamp', and choose your privacy setting. YouTube compiles these videos in your library under the chosen name, letting you access, reorder, or edit the video sequence at any time."
-  },
-  {
-    q: "How do I create a playlist on YouTube for studying?",
-    a: "To create a study playlist on YouTube, gather high-quality tutorials matching your syllabus. Click 'Save' under the first video, select 'Create new playlist', and name it (e.g. 'DSA Interview prep'). Add subsequent modules by clicking 'Save' and selecting this folder. Reorder the videos chronologically to follow a clean study flow, helping you stay organized and reduce learning fatigue."
-  },
-  {
-    q: "How do I delete a playlist on YouTube?",
-    a: "To delete a playlist on YouTube, go to your Library or Channel dashboard. Select the playlist you want to remove. Click the three-dots settings icon under the playlist title and description banner, and select 'Delete playlist'. Confirm your choice. This permanently deletes the folder and removes it from your YouTube account, though the individual videos remain unaffected."
-  },
-  {
-    q: "Can I save playlists and continue later?",
-    a: "Yes! When you find a scored track on our youtube playlist finder, you can save it to your library. We store your saved playlists and completed video checklists in localStorage. This means you can return anytime, open your Dashboard or Profile, view your study progress, check off completed lectures, and continue tracking your daily learning streak details without losing data."
-  },
-  {
-    q: "Are playlist recommendations based on reviews?",
-    a: "Yes, community feedback is a major factor in our recommendations. User reviews account for 35% of the total Quality Score. We analyze ratings and comment text to assess explanation clarity, audio quality, and logical pacing. This helps ensure that the highest-ranked playlists are not just popular, but are highly effective at teaching the subject matter."
-  },
-  {
-    q: "Does the platform rank playlists automatically?",
-    a: "Yes! Our system uses an automated scraper and scoring algorithm to evaluate playlists. When you search for a topic, the platform checks our database or queries YouTube live. It parses the video count, channels, and descriptions. It calculates scores dynamically using our five trust signals, ensuring you always see up-to-date quality leaderboards."
-  },
-  {
-    q: "Is this free to use?",
-    a: "Yes, our youtube playlist finder platform is 100% free for all students, developers, and self-guided learners. You can search any topic, analyze structured syllabus outlines, compare courses, build AI roadmaps, and save checklists to track your learning streaks without any subscriptions, payments, or sign-up walls. We believe structured education should be accessible to everyone."
+    a: "YouTube Playlist Finder is an educational catalog designed to resolve tutorial decision fatigue by parsing and scoring complete playlists from authorized YouTube channels."
   }
 ];
 
@@ -144,17 +90,21 @@ const faqSchema = {
       Stop wasting hours comparing disjointed videos. Search once, review transparent quality scores, and jump straight into guided syllabus sequences.
     </p>
 
-    <!-- Search input form (Client-intercepted) -->
+    <!-- Search input form (Standard GET Submission) -->
     <div class="w-full max-w-2xl mt-10 relative z-20">
-      <form id="search-form" class="relative">
+      <form method="GET" action="/" class="relative">
         <Search class="w-5 h-5 text-text-muted absolute left-4 top-1/2 -translate-y-1/2" />
         <input 
           type="text" 
           name="q"
-          id="search-input"
+          value={query}
+          required
           placeholder="What do you want to learn today?" 
           class="w-full h-14 pl-12 pr-28 rounded-2xl border border-white/5 bg-zinc-950/60 backdrop-blur-md text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent/60 focus:ring-1 focus:ring-accent/40 shadow-2xl transition-all"
         />
+        {difficulty && <input type="hidden" name="difficulty" value={difficulty} />}
+        {duration && <input type="hidden" name="duration" value={duration} />}
+        {sort && <input type="hidden" name="sort" value={sort} />}
         <button 
           type="submit" 
           class="absolute right-2 top-2 h-10 px-5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold flex items-center gap-1 hover:scale-95 active:scale-95 transition-all cursor-pointer"
@@ -164,746 +114,245 @@ const faqSchema = {
       </form>
 
       <!-- Trending keywords row -->
-      <div class="flex flex-wrap items-center justify-center gap-2 mt-4 text-xs" id="trending-searches-container">
+      <div class="flex flex-wrap items-center justify-center gap-2 mt-4 text-xs">
         <span class="text-text-muted font-mono text-[10px]">Trending searches:</span>
         {trendingKeywords.map(k => (
-          <button 
-            type="button"
-            data-keyword={k}
-            class="trending-btn px-2.5 py-0.5 rounded-full border border-white/5 bg-zinc-900/40 text-text-secondary hover:text-white hover:border-white/10 transition-all font-mono text-[10px] cursor-pointer"
+          <a 
+            href={`/?q=${encodeURIComponent(k)}`}
+            class="px-2.5 py-0.5 rounded-full border border-white/5 bg-zinc-900/40 text-text-secondary hover:text-white hover:border-white/10 transition-all font-mono text-[10px]"
           >
             {k}
-          </button>
+          </a>
         ))}
       </div>
     </div>
   </section>
 
-  <!-- DYNAMIC SEARCH RESULTS PANEL -->
-  <section id="search-results-section" class="hidden min-h-[400px] border-t border-white/5 pt-12 mt-8">
-    <div class="flex flex-col md:flex-row gap-8">
-      
-      <!-- Filters Sidebar -->
-      <div class="w-full md:w-64 shrink-0 space-y-6">
-        <div class="flex items-center justify-between border-b border-white/5 pb-3">
-          <h3 class="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
-            <SlidersHorizontal class="w-4 h-4 text-accent" /> Search Filters
-          </h3>
-          <button id="reset-filters" class="text-[10px] text-text-muted hover:text-white font-mono cursor-pointer bg-transparent border-none">Reset All</button>
-        </div>
+  {query ? (
+    <section id="search-results-section" class="min-h-[400px] border-t border-white/5 pt-12 mt-8">
+      <div class="flex flex-col md:flex-row gap-8">
+        
+        <div class="w-full md:w-64 shrink-0 space-y-6">
+          <div class="flex items-center justify-between border-b border-white/5 pb-3">
+            <h3 class="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
+              <SlidersHorizontal class="w-4 h-4 text-accent" /> Search Filters
+            </h3>
+            <a href={`/?q=${encodeURIComponent(query)}`} class="text-[10px] text-text-muted hover:text-white font-mono">Reset All</a>
+          </div>
 
-        <form id="filter-form" class="space-y-6">
-          <!-- Difficulty filter -->
-          <div class="space-y-2">
-            <label class="text-[10px] uppercase font-mono tracking-wider text-text-muted block">Difficulty</label>
-            <div class="space-y-1.5">
-              {['Beginner', 'Intermediate', 'Advanced'].map(lvl => (
-                <label class="flex items-center gap-2 text-xs text-text-secondary hover:text-white cursor-pointer select-none">
+          <form method="GET" action="/" class="space-y-6">
+            <input type="hidden" name="q" value={query} />
+            
+            <!-- Difficulty filter -->
+            <div class="space-y-2">
+              <label class="text-[10px] uppercase font-mono tracking-wider text-text-muted block">Difficulty</label>
+              <div class="space-y-1.5">
+                {['Beginner', 'Intermediate', 'Advanced'].map(lvl => (
+                  <label class="flex items-center gap-2 text-xs text-text-secondary hover:text-white cursor-pointer select-none">
+                    <input 
+                      type="radio" 
+                      name="difficulty" 
+                      value={lvl}
+                      checked={difficulty === lvl}
+                      onchange="this.form.submit()"
+                      class="rounded-full border-white/10 bg-zinc-900 text-accent focus:ring-accent"
+                    />
+                    <span>{lvl}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <!-- Duration filter -->
+            <div class="space-y-2">
+              <label class="text-[10px] uppercase font-mono tracking-wider text-text-muted block">Duration</label>
+              <div class="space-y-1.5">
+                <label class="flex items-center gap-2 text-xs text-text-secondary hover:text-white cursor-pointer">
                   <input 
                     type="radio" 
-                    name="difficulty" 
-                    value={lvl}
-                    class="filter-input rounded-full border-white/10 bg-zinc-900 text-accent focus:ring-accent"
+                    name="duration" 
+                    value="short" 
+                    checked={duration === 'short'}
+                    onchange="this.form.submit()"
+                    class="rounded-full border-white/10 bg-zinc-900 text-accent focus:ring-accent"
                   />
-                  <span>{lvl}</span>
+                  <span>Short course (&lt;40h)</span>
                 </label>
-              ))}
-            </div>
-          </div>
-
-          <!-- Duration filter -->
-          <div class="space-y-2">
-            <label class="text-[10px] uppercase font-mono tracking-wider text-text-muted block">Duration</label>
-            <div class="space-y-1.5">
-              <label class="flex items-center gap-2 text-xs text-text-secondary hover:text-white cursor-pointer">
-                <input 
-                  type="radio" 
-                  name="duration" 
-                  value="short" 
-                  class="filter-input rounded-full border-white/10 bg-zinc-900 text-accent focus:ring-accent"
-                />
-                <span>Short course (&lt;40h)</span>
-              </label>
-              <label class="flex items-center gap-2 text-xs text-text-secondary hover:text-white cursor-pointer">
-                <input 
-                  type="radio" 
-                  name="duration" 
-                  value="medium" 
-                  class="filter-input rounded-full border-white/10 bg-zinc-900 text-accent focus:ring-accent"
-                />
-                <span>Mid course (40-65h)</span>
-              </label>
-              <label class="flex items-center gap-2 text-xs text-text-secondary hover:text-white cursor-pointer">
-                <input 
-                  type="radio" 
-                  name="duration" 
-                  value="long" 
-                  class="filter-input rounded-full border-white/10 bg-zinc-900 text-accent focus:ring-accent"
-                />
-                <span>Comprehensive (&gt;65h)</span>
-              </label>
-            </div>
-          </div>
-
-          <!-- Sort filter -->
-          <div class="space-y-2 pt-2 border-t border-white/5">
-            <label for="sort-select" class="text-[10px] uppercase font-mono tracking-wider text-text-muted block">Sort by</label>
-            <select 
-              id="sort-select"
-              name="sort" 
-              class="filter-input w-full bg-zinc-900 border border-white/5 text-xs text-white rounded-xl py-2 px-3 focus:outline-none focus:border-accent"
-            >
-              <option value="best" selected>Best Score</option>
-              <option value="fastest">Fastest (Shortest)</option>
-              <option value="complete">Most Complete</option>
-            </select>
-          </div>
-        </form>
-      </div>
-
-      <!-- Results grid section -->
-      <div class="flex-1 space-y-6">
-        <div class="flex items-center justify-between text-xs text-text-muted font-mono border-b border-white/5 pb-3">
-          <span id="results-count-label">Searching...</span>
-          <span>Ranked by algortihm</span>
-        </div>
-
-        <!-- Skeleton loader -->
-        <div id="results-loader" class="hidden grid-cols-1 sm:grid-cols-2 gap-6">
-          {Array.from({ length: 4 }).map(() => (
-            <div class="glass-panel rounded-2xl overflow-hidden h-[380px] animate-pulse relative flex flex-col justify-between p-6">
-              <div class="w-full aspect-video bg-zinc-900/60 rounded-xl mb-4"></div>
-              <div class="h-4 bg-zinc-900/80 rounded w-2/3 mb-2"></div>
-              <div class="h-3 bg-zinc-900/60 rounded w-5/6 mb-4"></div>
-              <div class="border-t border-white/5 pt-4 flex justify-between">
-                <div class="w-8 h-8 rounded-full bg-zinc-900/80"></div>
-                <div class="h-3 bg-zinc-900/60 rounded w-16 mt-2"></div>
+                <label class="flex items-center gap-2 text-xs text-text-secondary hover:text-white cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="duration" 
+                    value="medium" 
+                    checked={duration === 'medium'}
+                    onchange="this.form.submit()"
+                    class="rounded-full border-white/10 bg-zinc-900 text-accent focus:ring-accent"
+                  />
+                  <span>Mid course (40-65h)</span>
+                </label>
+                <label class="flex items-center gap-2 text-xs text-text-secondary hover:text-white cursor-pointer">
+                  <input 
+                    type="radio" 
+                    name="duration" 
+                    value="long" 
+                    checked={duration === 'long'}
+                    onchange="this.form.submit()"
+                    class="rounded-full border-white/10 bg-zinc-900 text-accent focus:ring-accent"
+                  />
+                  <span>Comprehensive (&gt;65h)</span>
+                </label>
               </div>
             </div>
+
+            <!-- Sort filter -->
+            <div class="space-y-2 pt-2 border-t border-white/5">
+              <label for="sort-select" class="text-[10px] uppercase font-mono tracking-wider text-text-muted block">Sort by</label>
+              <select 
+                id="sort-select"
+                name="sort" 
+                onchange="this.form.submit()"
+                class="w-full bg-zinc-900 border border-white/5 text-xs text-white rounded-xl py-2 px-3 focus:outline-none focus:border-accent"
+              >
+                <option value="best" selected={sort === 'best'}>Best Score</option>
+                <option value="fastest" selected={sort === 'fastest'}>Fastest (Shortest)</option>
+                <option value="complete" selected={sort === 'complete'}>Most Complete</option>
+              </select>
+            </div>
+          </form>
+        </div>
+
+        <div class="flex-1 space-y-6">
+          {!apiKey && (
+            <div class="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-start gap-3">
+              <span class="text-amber-500 text-sm mt-0.5">⚠️</span>
+              <div class="space-y-0.5">
+                <h4 class="text-xs font-bold text-white">YouTube API Key Offline Mode</h4>
+                <p class="text-[11px] text-text-muted leading-relaxed">
+                  Live YouTube search requires a YouTube Data API v3 key. To search all of YouTube, configure the <code>YOUTUBE_API_KEY</code> environment variable. Displaying mock/static courses database.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <div class="flex items-center justify-between text-xs text-text-muted font-mono border-b border-white/5 pb-3">
+            <span>Found {playlists.length} {playlists.length === 1 ? 'playlist' : 'playlists'} for "{query}"</span>
+            <span>Ranked by quality</span>
+          </div>
+
+          {playlists.length === 0 ? (
+            <div class="flex flex-col items-center justify-center py-20 text-center border border-dashed border-white/5 rounded-2xl">
+              <h4 class="text-sm font-semibold text-white">No playlists found</h4>
+              <p class="text-xs text-text-muted max-w-sm mt-1">We couldn't find any scored playlists. The engine automatically crawls matching YouTube tracks when you request them.</p>
+            </div>
+          ) : (
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {playlists.map(p => <PlaylistCard playlist={p} />)}
+            </div>
+          )}
+        </div>
+
+      </div>
+    </section>
+  ) : (
+    <div class="space-y-24 mt-12">
+      
+      <!-- Editor Picks static gallery -->
+      <section class="max-w-5xl mx-auto py-8">
+        <div class="text-center mb-8">
+          <span class="text-[10px] font-mono uppercase tracking-wider text-text-muted">Top Rated Today</span>
+          <h2 class="text-2xl font-bold tracking-tight text-white mt-1">Recommended Tracks</h2>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {editorPicks.slice(0, 3).map(p => (
+            <PlaylistCard playlist={p} />
           ))}
         </div>
+      </section>
 
-        <!-- Dynamic listings -->
-        <div id="results-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <!-- Populated dynamically via JS -->
+      <!-- How It Works Section -->
+      <section class="border-t border-white/5 pt-20">
+        <div class="text-center max-w-2xl mx-auto mb-16">
+          <h2 class="text-2xl md:text-3xl font-bold tracking-tight text-white accent-gradient-text">How It Works.</h2>
+          <p class="text-xs text-text-secondary mt-3">We skip the noise and analyze structure, reviews, and recency mathematically.</p>
         </div>
 
-        <!-- Empty state placeholder -->
-        <div id="results-empty-state" class="hidden flex-col items-center justify-center py-20 text-center border border-dashed border-white/5 rounded-2xl">
-          <h4 class="text-sm font-semibold text-white">No playlists found</h4>
-          <p class="text-xs text-text-muted max-w-sm mt-1">We couldn't find any scored playlists. The engine automatically crawls matching YouTube tracks when you request them.</p>
-        </div>
-      </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="glass-panel rounded-2xl p-6 relative">
+            <span class="absolute top-4 right-4 text-4xl font-extrabold font-mono text-white/5 select-none">01</span>
+            <div class="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mb-4">
+              <Search class="w-4 h-4" />
+            </div>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono">1. Query Anything</h3>
+            <p class="text-xs text-text-secondary mt-2 leading-relaxed">Enter a skill, topic, or field. Our database dynamically searches YouTube APIs to fetch matched tracks.</p>
+          </div>
 
+          <div class="glass-panel rounded-2xl p-6 relative">
+            <span class="absolute top-4 right-4 text-4xl font-extrabold font-mono text-white/5 select-none">02</span>
+            <div class="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mb-4">
+              <Cpu class="w-4 h-4" />
+            </div>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono">2. Calculate Quality Score</h3>
+            <p class="text-xs text-text-secondary mt-2 leading-relaxed">Every playlist undergoes strict multi-factor evaluation (Structure, Reviews, fresh checks) yielding transparent scores.</p>
+          </div>
+
+          <div class="glass-panel rounded-2xl p-6 relative">
+            <span class="absolute top-4 right-4 text-4xl font-extrabold font-mono text-white/5 select-none">03</span>
+            <div class="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mb-4">
+              <GraduationCap class="w-4 h-4" />
+            </div>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono">3. Distraction-Free Study</h3>
+            <p class="text-xs text-text-secondary mt-2 leading-relaxed">Export playlists, click "Study Mode" to block comments, and monitor your daily streak details automatically.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Categories Grid Section -->
+      <section class="border-t border-white/5 pt-20">
+        <div class="flex items-center justify-between border-b border-white/5 pb-4 mb-10">
+          <div>
+            <h2 class="text-2xl font-bold tracking-tight text-white">Popular Subject Tracts</h2>
+            <p class="text-xs text-text-muted mt-1">Jump directly into scored listings for high-demand topics.</p>
+          </div>
+          <Compass class="w-5 h-5 text-text-muted" />
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {categories.map(c => (
+            <a 
+              href={`/?q=${encodeURIComponent(c.slug)}`}
+              class="group p-5 rounded-2xl border border-white/5 bg-zinc-950/40 hover:bg-zinc-900/60 hover:border-white/10 transition-all flex flex-col justify-between text-left"
+            >
+              <span class="text-xs font-semibold text-white group-hover:text-accent transition-colors">{c.name}</span>
+              <span class="text-[10px] font-mono text-text-muted mt-4 block">{c.count} Tracks Scored</span>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <!-- FAQ Accordion -->
+      <section class="border-t border-white/5 pt-20 max-w-5xl mx-auto">
+        <div class="text-center mb-12">
+          <h2 class="text-2xl font-bold tracking-tight text-white">Frequently Asked Questions</h2>
+          <p class="text-xs text-text-muted mt-1">Get instant answers to common questions about finding, saving, and ranking YouTube study playlists.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+          {faqs.map(faq => (
+            <details class="group border border-white/5 bg-zinc-950/40 rounded-2xl p-4 cursor-pointer [&_summary::-webkit-details-marker]:hidden h-fit transition-colors hover:border-white/10">
+              <summary class="flex justify-between items-center text-xs font-semibold text-white font-mono select-none">
+                <span>{faq.q}</span>
+                <span class="transition-transform group-open:rotate-180 text-text-muted group-hover:text-white shrink-0 ml-4">
+                  <ChevronDown class="w-4 h-4" />
+                </span>
+              </summary>
+              <p class="text-xs text-text-secondary leading-relaxed mt-3 border-t border-white/5 pt-3 pl-1">
+                {faq.a}
+              </p>
+            </details>
+          ))}
+        </div>
+      </section>
     </div>
-  </section>
-
-  <!-- LANDING PAGE MARKETING CONTENT -->
-  <div id="landing-sections" class="space-y-24 mt-12">
-    
-    <!-- Editor Picks static gallery -->
-    <section class="max-w-5xl mx-auto py-8">
-      <div class="text-center mb-8">
-        <span class="text-[10px] font-mono uppercase tracking-wider text-text-muted">Top Rated Today</span>
-        <h2 class="text-2xl font-bold tracking-tight text-white mt-1">Recommended Tracks</h2>
-      </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="recommended-tracks-grid">
-        {PLAYLISTS.slice(0, 3).map(p => (
-          <PlaylistCard playlist={p} />
-        ))}
-      </div>
-    </section>
-
-    <!-- How It Works Section -->
-    <section class="border-t border-white/5 pt-20">
-      <div class="text-center max-w-2xl mx-auto mb-16">
-        <h2 class="text-2xl md:text-3xl font-bold tracking-tight text-white accent-gradient-text">How It Works.</h2>
-        <p class="text-xs text-text-secondary mt-3">We skip the noise and analyze structure, reviews, and recency mathematically.</p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="glass-panel rounded-2xl p-6 relative">
-          <span class="absolute top-4 right-4 text-4xl font-extrabold font-mono text-white/5 select-none">01</span>
-          <div class="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mb-4">
-            <Search class="w-4 h-4" />
-          </div>
-          <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono">1. Query Anything</h3>
-          <p class="text-xs text-text-secondary mt-2 leading-relaxed">Enter a skill, topic, or field. Our database dynamically searches YouTube APIs to fetch matched tracks.</p>
-        </div>
-
-        <div class="glass-panel rounded-2xl p-6 relative">
-          <span class="absolute top-4 right-4 text-4xl font-extrabold font-mono text-white/5 select-none">02</span>
-          <div class="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mb-4">
-            <Cpu class="w-4 h-4" />
-          </div>
-          <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono">2. Calculate Quality Score</h3>
-          <p class="text-xs text-text-secondary mt-2 leading-relaxed">Every playlist undergoes strict multi-factor evaluation (Structure, Reviews, fresh checks) yielding transparent scores.</p>
-        </div>
-
-        <div class="glass-panel rounded-2xl p-6 relative">
-          <span class="absolute top-4 right-4 text-4xl font-extrabold font-mono text-white/5 select-none">03</span>
-          <div class="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center text-accent mb-4">
-            <GraduationCap class="w-4 h-4" />
-          </div>
-          <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono">3. Distraction-Free Study</h3>
-          <p class="text-xs text-text-secondary mt-2 leading-relaxed">Export playlists, click "Study Mode" to block comments, and monitor your daily streak details automatically.</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Categories Grid Section -->
-    <section class="border-t border-white/5 pt-20">
-      <div class="flex items-center justify-between border-b border-white/5 pb-4 mb-10">
-        <div>
-          <h2 class="text-2xl font-bold tracking-tight text-white">Popular Subject Tracts</h2>
-          <p class="text-xs text-text-muted mt-1">Jump directly into scored listings for high-demand topics.</p>
-        </div>
-        <Compass class="w-5 h-5 text-text-muted" />
-      </div>
-
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4" id="popular-tracts-grid">
-        {categories.map(c => (
-          <button 
-            type="button"
-            data-keyword={c.slug}
-            class="category-btn group p-5 rounded-2xl border border-white/5 bg-zinc-950/40 hover:bg-zinc-900/60 hover:border-white/10 transition-all flex flex-col justify-between text-left cursor-pointer"
-          >
-            <span class="text-xs font-semibold text-white group-hover:text-accent transition-colors">{c.name}</span>
-            <span class="text-[10px] font-mono text-text-muted mt-4 block">{c.count} Tracks Scored</span>
-          </button>
-        ))}
-      </div>
-    </section>
-
-    <!-- FAQ Accordion -->
-    <section class="border-t border-white/5 pt-20 max-w-5xl mx-auto">
-      <div class="text-center mb-12">
-        <h2 class="text-2xl font-bold tracking-tight text-white">Frequently Asked Questions</h2>
-        <p class="text-xs text-text-muted mt-1">Get instant answers to common questions about finding, saving, and ranking YouTube study playlists.</p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-        {faqs.map(faq => (
-          <details class="group border border-white/5 bg-zinc-950/40 rounded-2xl p-4 cursor-pointer [&_summary::-webkit-details-marker]:hidden h-fit transition-colors hover:border-white/10">
-            <summary class="flex justify-between items-center text-xs font-semibold text-white font-mono select-none">
-              <span>{faq.q}</span>
-              <span class="transition-transform group-open:rotate-180 text-text-muted group-hover:text-white shrink-0 ml-4">
-                <ChevronDown class="w-4 h-4" />
-              </span>
-            </summary>
-            <p class="text-xs text-text-secondary leading-relaxed mt-3 border-t border-white/5 pt-3 pl-1">
-              {faq.a}
-            </p>
-          </details>
-        ))}
-      </div>
-    </section>
-
-    <!-- Comprehensive On-Page SEO content block (approx. 600 words) & Newsletter capture -->
-    <section class="border-t border-white/5 pt-20 max-w-4xl mx-auto space-y-16">
-      
-      <!-- Newsletter sign-up block -->
-      <div class="glass-panel border border-white/5 rounded-3xl p-8 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
-        <div class="absolute -right-16 -top-16 w-32 h-32 rounded-full bg-accent/15 blur-3xl pointer-events-none"></div>
-        <div class="space-y-2 max-w-md text-left">
-          <h3 class="text-lg font-bold text-white tracking-tight">Subscribe to Structured Playlists</h3>
-          <p class="text-xs text-text-secondary leading-relaxed">Get the highest-scoring tutorial playlists and study roadmaps delivered direct to your inbox weekly.</p>
-        </div>
-        <form class="flex w-full md:w-auto gap-2 text-xs" onsubmit="event.preventDefault(); alert('Subscribed successfully!');">
-          <input 
-            type="email" 
-            placeholder="Enter your email address..."
-            required
-            class="px-4 py-2.5 rounded-xl bg-zinc-950 border border-white/10 text-white placeholder-text-muted focus:outline-none focus:border-accent w-full sm:w-64"
-          />
-          <button type="submit" class="px-5 py-2.5 rounded-xl bg-accent text-white font-semibold hover:scale-98 transition-transform cursor-pointer">
-            Subscribe
-          </button>
-        </form>
-      </div>
-
-      <!-- Semantic SEO Articles Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-left leading-relaxed">
-        <div class="space-y-4">
-          <h2 class="text-xl font-bold text-white tracking-tight">youtubeplaylistfinder: The Ultimate YouTube Playlist Finder for Structured Learning</h2>
-          <p class="text-xs text-text-secondary">
-            In the modern digital era, self-education has become the primary driver for career transition and skill development. YouTube is home to millions of educational videos, but learners face a massive obstacle: decision fatigue. Searching for "learn Python" or "Machine Learning tutorials" returns hundreds of video paths, making it incredibly difficult to find a structured sequence.
-          </p>
-          <p class="text-xs text-text-secondary">
-            That is where a dedicated <strong>youtube playlist finder</strong> like youtubeplaylistfinder comes in. Instead of forcing you to piece together fragmented clips, we mathematically rank, score, and catalog complete study playlists to give you a cohesive syllabus. Learn faster, skip the noise, and track your daily checklist milestones in one clean dashboard.
-          </p>
-          <h3 class="text-sm font-semibold text-white uppercase tracking-wider font-mono">Why Structure Matters in Online Learning</h3>
-          <p class="text-xs text-text-secondary">
-            Watching disconnected tutorials disrupts your memory consolidation process. A complete, organized <strong>online course playlist</strong> ensures you learn concepts sequentially, building from basic syntax to advanced enterprise scaling. Our playlist tracker helps you mark videos as completed, automatically recalculating your stats in real time.
-          </p>
-        </div>
-
-        <div class="space-y-4">
-          <h3 class="text-sm font-semibold text-white uppercase tracking-wider font-mono">How Our Dynamic Quality Score Engine Works</h3>
-          <p class="text-xs text-text-secondary">
-            Unlike standard search engines that prioritize view counts or sensational thumbnails, our platform ranks playlists using a multi-factor scoring formula:
-          </p>
-          <ul class="space-y-2 text-xs text-text-secondary font-mono">
-            <li class="flex items-start gap-2">
-              <span class="text-accent">•</span>
-              <span><strong>User Reviews (35%)</strong>: Curated community ratings on explanation clarity.</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="text-accent">•</span>
-              <span><strong>Completion Rate (25%)</strong>: The percentage of learners who complete the list.</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="text-accent">•</span>
-              <span><strong>Playlist Structure (20%)</strong>: Deductions for redundant clips.</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="text-accent">•</span>
-              <span><strong>Recent Activity (10%)</strong>: Freshness and video upload recency.</span>
-            </li>
-            <li class="flex items-start gap-2">
-              <span class="text-accent">•</span>
-              <span><strong>Creator Authority (10%)</strong>: The expertise of the channel host.</span>
-            </li>
-          </ul>
-          <h3 class="text-sm font-semibold text-white uppercase tracking-wider font-mono">Curated Learning Guides & Subject Roadmaps</h3>
-          <p class="text-xs text-text-secondary">
-            Mastering complex disciplines requires more than just one video track. Under our <strong>Roadmaps tab</strong>, we construct logic-mapped pathways linking prerequisites, current modules, and next steps. Whether you are prep-planning for UPSC, mastering Data Structures and Algorithms, or mapping Kubernetes orchestration, our AI roadmap builder compiles structural syllabus benchmarks from A to Z.
-          </p>
-        </div>
-      </div>
-    </section>
-
-  </div>
+  )}
 
 </Layout>
-
-  <script is:inline id="playlists-data" type="application/json" set:html={JSON.stringify(PLAYLISTS)}></script>
-
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const playlistsDataEl = document.getElementById('playlists-data');
-    const PLAYLISTS = playlistsDataEl ? JSON.parse(playlistsDataEl.textContent || '[]') : [];
-    const searchForm = document.getElementById('search-form') as HTMLFormElement;
-    const searchInput = document.getElementById('search-input') as HTMLInputElement;
-    const resultsSection = document.getElementById('search-results-section');
-    const landingSections = document.getElementById('landing-sections');
-    const resultsGrid = document.getElementById('results-grid');
-    const resultsLoader = document.getElementById('results-loader');
-    const resultsCountLabel = document.getElementById('results-count-label');
-    const resultsEmptyState = document.getElementById('results-empty-state');
-    const filterForm = document.getElementById('filter-form') as HTMLFormElement;
-    const resetFiltersBtn = document.getElementById('reset-filters') as HTMLButtonElement;
-
-    // 24 Hour Dynamic Rotation Engine (AI & Real-World Data Simulation)
-    function rotateHomepageData() {
-      const ROTATION_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours
-      const now = Date.now();
-      const lastRotation = parseInt(localStorage.getItem('homepage_rotation_timestamp') || '0', 10);
-      
-      let trendingKeywords, categoriesList, recommendedPlaylists;
-
-      if (!lastRotation || (now - lastRotation) > ROTATION_INTERVAL) {
-        // Pool of trending keywords
-        const keywordsPool = [
-          'Machine Learning', 'DSA', 'Python', 'UPSC', 'Organic Chemistry',
-          'Docker & Kubernetes', 'System Design', 'Cybersecurity', 'React JS', 'Generative AI',
-          'Web Development', 'DevOps Roadmap', 'TypeScript', 'SQL Databases', 'Rust Lang',
-          'Deep Learning', 'Data Science', 'JavaScript', 'HTML & CSS', 'Next.js',
-          'Golang', 'Node.js', 'Blockchain', 'Cloud Computing', 'Git & GitHub'
-        ];
-        
-        // Pool of category subject tracts
-        const categoriesPool = [
-          { name: 'Machine Learning', count: 3, slug: 'Machine Learning' },
-          { name: 'Data Structures & Algorithms', count: 2, slug: 'DSA' },
-          { name: 'Python Development', count: 2, slug: 'Python' },
-          { name: 'Academic Science', count: 1, slug: 'Organic Chemistry' },
-          { name: 'Artificial Intelligence', count: 4, slug: 'Generative AI' },
-          { name: 'Software Architecture', count: 3, slug: 'System Design' },
-          { name: 'Cloud Infrastructure', count: 2, slug: 'Docker & Kubernetes' },
-          { name: 'Web Programming', count: 5, slug: 'React JS' },
-          { name: 'Cybersecurity Systems', count: 2, slug: 'Cybersecurity' }
-        ];
-
-        // Shuffle and slice randomly
-        trendingKeywords = keywordsPool.sort(() => 0.5 - Math.random()).slice(0, 5);
-        categoriesList = categoriesPool.sort(() => 0.5 - Math.random()).slice(0, 4);
-        recommendedPlaylists = [...PLAYLISTS].sort(() => 0.5 - Math.random()).slice(0, 3);
-
-        // Cache parameters in localStorage
-        localStorage.setItem('homepage_trending_keywords', JSON.stringify(trendingKeywords));
-        localStorage.setItem('homepage_categories', JSON.stringify(categoriesList));
-        localStorage.setItem('homepage_recommended_playlists', JSON.stringify(recommendedPlaylists));
-        localStorage.setItem('homepage_rotation_timestamp', now.toString());
-      } else {
-        // Load from browser cache
-        try {
-          trendingKeywords = JSON.parse(localStorage.getItem('homepage_trending_keywords') || '[]');
-          categoriesList = JSON.parse(localStorage.getItem('homepage_categories') || '[]');
-          recommendedPlaylists = JSON.parse(localStorage.getItem('homepage_recommended_playlists') || '[]');
-        } catch {
-          trendingKeywords = ['Machine Learning', 'DSA', 'Python', 'UPSC', 'Organic Chemistry'];
-          categoriesList = [
-            { name: 'Machine Learning', count: 3, slug: 'Machine Learning' },
-            { name: 'Data Structures & Algorithms', count: 2, slug: 'DSA' },
-            { name: 'Python Development', count: 2, slug: 'Python' },
-            { name: 'Academic Science', count: 1, slug: 'Organic Chemistry' }
-          ];
-          recommendedPlaylists = PLAYLISTS.slice(0, 3);
-        }
-      }
-
-      // Hydrate trending searches in DOM
-      const trendsContainer = document.getElementById('trending-searches-container');
-      if (trendsContainer) {
-        trendsContainer.innerHTML = `
-          <span class="text-text-muted font-mono text-[10px]">Trending searches:</span>
-          ${trendingKeywords.map(k => `
-            <button 
-              type="button"
-              data-keyword="${k}"
-              class="trending-btn px-2.5 py-0.5 rounded-full border border-white/5 bg-zinc-900/40 text-text-secondary hover:text-white hover:border-white/10 transition-all font-mono text-[10px] cursor-pointer"
-            >
-              ${k}
-            </button>
-          `).join('')}
-        `;
-      }
-
-      // Hydrate categories (Subject Tracts) in DOM
-      const tractsGrid = document.getElementById('popular-tracts-grid');
-      if (tractsGrid) {
-        tractsGrid.innerHTML = categoriesList.map(c => `
-          <button 
-            type="button"
-            data-keyword="${c.slug}"
-            class="category-btn group p-5 rounded-2xl border border-white/5 bg-zinc-950/40 hover:bg-zinc-900/60 hover:border-white/10 transition-all flex flex-col justify-between text-left cursor-pointer"
-          >
-            <span class="text-xs font-semibold text-white group-hover:text-accent transition-colors">${c.name}</span>
-            <span class="text-[10px] font-mono text-text-muted mt-4 block">${c.count} Tracks Scored</span>
-          </button>
-        `).join('');
-      }
-
-      // Hydrate Recommended Tracks in DOM
-      const recGrid = document.getElementById('recommended-tracks-grid');
-      if (recGrid) {
-        recGrid.innerHTML = recommendedPlaylists.map(p => {
-          const isSaved = JSON.parse(localStorage.getItem('savedPlaylists') || '[]').includes(p.slug);
-          
-          const getDifficultyBadge = (diff) => {
-            if (diff === 'Beginner') return 'border-emerald-500/20 text-emerald-400 bg-emerald-950/10';
-            if (diff === 'Intermediate') return 'border-yellow-500/20 text-yellow-400 bg-yellow-950/10';
-            return 'border-red-500/20 text-red-400 bg-red-950/10';
-          };
-
-          const getGradeLabel = (val) => {
-            if (val >= 95) return 'Elite Tier';
-            if (val >= 90) return 'Top Tier';
-            return 'Highly Rated';
-          };
-
-          return `
-            <div class="group glass-panel rounded-2xl overflow-hidden glass-panel-hover flex flex-col justify-between h-full relative" data-slug="${p.slug}">
-              <div class="relative w-full aspect-video overflow-hidden border-b border-white/5 bg-zinc-950">
-                <img src="${p.thumbnail}" alt="${p.title}" loading="lazy" class="w-full h-full object-cover opacity-75 group-hover:scale-105 group-hover:opacity-90 transition-all duration-300" />
-                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
-                
-                <button 
-                  class="bookmark-btn absolute top-3 right-3 p-2 rounded-full bg-black/60 border border-white/5 text-text-secondary hover:text-white hover:bg-black/90 hover:scale-110 active:scale-95 transition-all z-20 cursor-pointer"
-                  data-playlist-slug="${p.slug}"
-                >
-                  <svg class="w-4 h-4 bookmark-icon ${isSaved ? 'fill-accent text-accent' : 'fill-transparent text-zinc-400'}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                  </svg>
-                </button>
-                
-                <div class="absolute bottom-3 left-3 flex items-center gap-2 z-10">
-                  <span class="px-2.5 py-0.5 rounded-full bg-black/75 border border-white/5 text-[10px] font-mono text-white flex items-center gap-1">
-                    ${p.videoCount} videos
-                  </span>
-                  <span class="px-2.5 py-0.5 rounded-full bg-black/75 border border-white/5 text-[10px] font-mono text-white flex items-center gap-1">
-                    ${p.durationHours} hours
-                  </span>
-                </div>
-              </div>
-
-              <div class="p-6 flex-1 flex flex-col justify-between">
-                <div>
-                  <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500">${p.channel}</span>
-                  <h3 class="text-base font-bold tracking-tight text-white line-clamp-2 mt-1 leading-snug group-hover:text-accent transition-colors">${p.title}</h3>
-                  <p class="text-xs text-zinc-400 line-clamp-2 leading-relaxed mt-2 mb-4">${p.description}</p>
-                </div>
-
-                <div class="border-t border-white/5 pt-4 flex items-center justify-between">
-                  <div class="flex items-center gap-2 font-mono">
-                    <div class="w-8 h-8 rounded-full border border-accent/20 bg-accent/5 flex items-center justify-center font-bold text-xs text-white">
-                      ${p.score}
-                    </div>
-                    <div class="flex flex-col">
-                      <span class="text-[8px] uppercase tracking-wider text-accent font-semibold leading-none">${getGradeLabel(p.score)}</span>
-                      <span class="text-[10px] text-zinc-500 leading-none">Quality</span>
-                    </div>
-                  </div>
-
-                  <span class="text-[9px] uppercase px-2 py-0.5 rounded border ${getDifficultyBadge(p.difficulty)}">
-                    ${p.difficulty}
-                  </span>
-                </div>
-              </div>
-
-              <div class="px-6 pb-6 pt-2 flex gap-3">
-                <a href="/playlist/${p.slug}" class="flex-1 py-2 px-4 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-lg text-center">
-                  View Breakdown
-                </a>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
-
-      // Re-attach search input click events to new buttons
-      rebindKeywordButtons();
-      // Re-bind bookmarks to bookmark buttons
-      bindDynamicBookmarks();
-    }
-
-    function rebindKeywordButtons() {
-      document.querySelectorAll('.trending-btn, .category-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const kw = btn.getAttribute('data-keyword');
-          if (kw) {
-            searchInput.value = kw;
-            updateSearchUrl({ q: kw });
-            performSearch();
-          }
-        });
-      });
-    }
-
-    // Run dynamic rotation
-    rotateHomepageData();
-
-    // Intercept form submission
-    if (searchForm) {
-      searchForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const query = searchInput.value.trim();
-        updateSearchUrl({ q: query });
-        performSearch();
-      });
-    }
-
-    // Intercept filter modifications
-    if (filterForm) {
-      filterForm.addEventListener('change', () => {
-        performSearch();
-      });
-    }
-
-    if (resetFiltersBtn) {
-      resetFiltersBtn.addEventListener('click', () => {
-        filterForm.reset();
-        performSearch();
-      });
-    }
-
-    // Helper to update query parameters in browser history
-    function updateSearchUrl(params: Record<string, string>) {
-      const url = new URL(window.location.href);
-      Object.entries(params).forEach(([key, val]) => {
-        if (val) {
-          url.searchParams.set(key, val);
-        } else {
-          url.searchParams.delete(key);
-        }
-      });
-      window.history.pushState({}, '', url.toString());
-    }
-
-    // Main search action
-    async function performSearch() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const query = urlParams.get('q') || '';
-      
-      // Sync search input
-      if (searchInput.value !== query) {
-        searchInput.value = query;
-      }
-
-      if (!query) {
-        resultsSection?.classList.add('hidden');
-        landingSections?.classList.remove('hidden');
-        return;
-      }
-
-      // Hide landing page contents, show loader
-      landingSections?.classList.add('hidden');
-      resultsSection?.classList.remove('hidden');
-      resultsGrid?.classList.add('hidden');
-      resultsEmptyState?.classList.add('hidden');
-      resultsLoader?.classList.remove('hidden');
-      resultsLoader?.classList.add('grid');
-      resultsCountLabel!.textContent = 'Searching...';
-
-      // Capture active filter states
-      const formData = new FormData(filterForm);
-      const difficulty = formData.get('difficulty') || '';
-      const duration = formData.get('duration') || '';
-      const sort = formData.get('sort') || 'best';
-
-      try {
-        const queryParams = new URLSearchParams({
-          q: query,
-          difficulty: difficulty.toString(),
-          duration: duration.toString(),
-          sort: sort.toString()
-        });
-
-        // Call backend API
-        const response = await fetch(`/api/playlists.json?${queryParams.toString()}`);
-        if (!response.ok) throw new Error('API fetch failed');
-        
-        const playlists = await response.json();
-        
-        // Hide loader
-        resultsLoader?.classList.remove('grid');
-        resultsLoader?.classList.add('hidden');
-
-        resultsCountLabel!.textContent = `Found ${playlists.length} ${playlists.length === 1 ? 'playlist' : 'playlists'} for "${query}"`;
-
-        if (playlists.length === 0) {
-          resultsGrid?.classList.add('hidden');
-          resultsEmptyState?.classList.remove('hidden');
-          return;
-        }
-
-        resultsEmptyState?.classList.add('hidden');
-        resultsGrid?.classList.remove('hidden');
-
-        // Render card items into DOM
-        resultsGrid!.innerHTML = playlists.map((p: any) => {
-          const isSaved = JSON.parse(localStorage.getItem('savedPlaylists') || '[]').includes(p.slug);
-          
-          const getDifficultyBadge = (diff: string) => {
-            if (diff === 'Beginner') return 'border-emerald-500/20 text-emerald-400 bg-emerald-950/10';
-            if (diff === 'Intermediate') return 'border-yellow-500/20 text-yellow-400 bg-yellow-950/10';
-            return 'border-red-500/20 text-red-400 bg-red-950/10';
-          };
-
-          const getGradeLabel = (val: number) => {
-            if (val >= 95) return 'Elite Tier';
-            if (val >= 90) return 'Top Tier';
-            return 'Highly Rated';
-          };
-
-          return `
-            <div class="group glass-panel rounded-2xl overflow-hidden glass-panel-hover flex flex-col justify-between h-full relative" data-slug="${p.slug}">
-              <div class="relative w-full aspect-video overflow-hidden border-b border-white/5 bg-zinc-950">
-                <img src="${p.thumbnail}" alt="${p.title}" loading="lazy" class="w-full h-full object-cover opacity-75 group-hover:scale-105 group-hover:opacity-90 transition-all duration-300" />
-                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
-                
-                <button 
-                  class="bookmark-btn absolute top-3 right-3 p-2 rounded-full bg-black/60 border border-white/5 text-text-secondary hover:text-white hover:bg-black/90 hover:scale-110 active:scale-95 transition-all z-20 cursor-pointer"
-                  data-playlist-slug="${p.slug}"
-                >
-                  <svg class="w-4 h-4 bookmark-icon ${isSaved ? 'fill-accent text-accent' : 'fill-transparent text-zinc-400'}" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                  </svg>
-                </button>
-                
-                <div class="absolute bottom-3 left-3 flex items-center gap-2 z-10">
-                  <span class="px-2.5 py-0.5 rounded-full bg-black/75 border border-white/5 text-[10px] font-mono text-white flex items-center gap-1">
-                    ${p.videoCount} videos
-                  </span>
-                  <span class="px-2.5 py-0.5 rounded-full bg-black/75 border border-white/5 text-[10px] font-mono text-white flex items-center gap-1">
-                    ${p.durationHours} hours
-                  </span>
-                </div>
-              </div>
-
-              <div class="p-6 flex-1 flex flex-col justify-between">
-                <div>
-                  <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500">${p.channel}</span>
-                  <h3 class="text-base font-bold tracking-tight text-white line-clamp-2 mt-1 leading-snug group-hover:text-accent transition-colors">${p.title}</h3>
-                  <p class="text-xs text-zinc-400 line-clamp-2 leading-relaxed mt-2 mb-4">${p.description}</p>
-                </div>
-
-                <div class="border-t border-white/5 pt-4 flex items-center justify-between">
-                  <!-- Simple Score Indicator -->
-                  <div class="flex items-center gap-2 font-mono">
-                    <div class="w-8 h-8 rounded-full border border-accent/20 bg-accent/5 flex items-center justify-center font-bold text-xs text-white">
-                      ${p.score}
-                    </div>
-                    <div class="flex flex-col">
-                      <span class="text-[8px] uppercase tracking-wider text-accent font-semibold leading-none">${getGradeLabel(p.score)}</span>
-                      <span class="text-[10px] text-zinc-500 leading-none">Quality</span>
-                    </div>
-                  </div>
-
-                  <span class="text-[9px] uppercase px-2 py-0.5 rounded border ${getDifficultyBadge(p.difficulty)}">
-                    ${p.difficulty}
-                  </span>
-                </div>
-              </div>
-
-              <div class="px-6 pb-6 pt-2 flex gap-3">
-                <a href="/playlist/${p.slug}" class="flex-1 py-2 px-4 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-lg text-center">
-                  View Breakdown
-                </a>
-              </div>
-            </div>
-          `;
-        }).join('');
-
-        // Bind bookmark buttons inside dynamic grid
-        bindDynamicBookmarks();
-
-      } catch (err) {
-        console.error(err);
-        resultsLoader?.classList.add('hidden');
-        resultsEmptyState?.classList.remove('hidden');
-      }
-    }
-
-    function bindDynamicBookmarks() {
-      const bookmarkButtons = document.querySelectorAll('#results-grid .bookmark-btn, #recommended-tracks-grid .bookmark-btn');
-      
-      const getSaved = () => {
-        try {
-          return JSON.parse(localStorage.getItem('savedPlaylists') || '[]');
-        } catch { return []; }
-      };
-
-      bookmarkButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const slug = btn.getAttribute('data-playlist-slug');
-          if (!slug) return;
-          
-          let saved = getSaved();
-          const icon = btn.querySelector('.bookmark-icon');
-
-          if (saved.includes(slug)) {
-            saved = saved.filter((s: string) => s !== slug);
-            icon?.classList.remove('fill-accent', 'text-accent');
-            icon?.classList.add('fill-transparent', 'text-zinc-400');
-          } else {
-            saved.push(slug);
-            icon?.classList.add('fill-accent', 'text-accent');
-            icon?.classList.remove('fill-transparent', 'text-zinc-400');
-          }
-          localStorage.setItem('savedPlaylists', JSON.stringify(saved));
-        });
-      });
-    }
-
-    // Trigger initial search if q param is present on load
-    const initialUrlParams = new URLSearchParams(window.location.search);
-    if (initialUrlParams.has('q')) {
-      performSearch();
-    }
-  });
-</script>

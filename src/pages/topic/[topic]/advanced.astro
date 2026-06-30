@@ -1,6 +1,8 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
+import PlaylistCard from '../../../components/PlaylistCard.astro';
 import { searchPlaylists } from '../../../lib/api';
+import { getCloudflareEnv } from '../../../lib/youtube';
 import { ChevronLeft } from '@lucide/astro';
 
 const { topic } = Astro.params;
@@ -11,7 +13,10 @@ if (!topic) {
 const cleanTopic = topic.trim().replace(/-/g, ' ');
 const titleCaseTopic = cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1);
 
-const playlists = await searchPlaylists(cleanTopic, { difficulty: 'Advanced' });
+const env = await getCloudflareEnv();
+const apiKey = env?.YOUTUBE_API_KEY || import.meta.env.YOUTUBE_API_KEY || '';
+
+const playlists = await searchPlaylists(cleanTopic, { difficulty: 'Advanced' }, 'best', apiKey, env);
 
 // Breadcrumb Schema
 const breadcrumbs = {
@@ -53,54 +58,7 @@ const breadcrumbs = {
         </div>
       ) : (
         playlists.map(playlist => (
-          <div class="group glass-panel rounded-2xl overflow-hidden glass-panel-hover flex flex-col justify-between h-full relative">
-            <div class="relative w-full aspect-video overflow-hidden border-b border-white/5 bg-zinc-950">
-              <img src={playlist.thumbnail} alt={playlist.title} class="w-full h-full object-cover opacity-75 group-hover:scale-105 group-hover:opacity-90 transition-all duration-300" />
-              <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
-              
-              <div class="absolute bottom-3 left-3 flex items-center gap-2 z-10">
-                <span class="px-2.5 py-0.5 rounded-full bg-black/75 border border-white/5 text-[10px] font-mono text-white flex items-center gap-1">
-                  {playlist.videoCount} videos
-                </span>
-                <span class="px-2.5 py-0.5 rounded-full bg-black/75 border border-white/5 text-[10px] font-mono text-white flex items-center gap-1">
-                  {playlist.durationHours} hours
-                </span>
-              </div>
-            </div>
-
-            <div class="p-6 flex-1 flex flex-col justify-between">
-              <div>
-                <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500">{playlist.channel}</span>
-                <h2 class="text-base font-bold tracking-tight text-white line-clamp-2 mt-1 leading-snug group-hover:text-accent transition-colors">
-                  <a href={`/playlist/${playlist.slug}`}>{playlist.title}</a>
-                </h2>
-                <p class="text-xs text-zinc-400 line-clamp-2 leading-relaxed mt-2 mb-4">{playlist.description}</p>
-              </div>
-
-              <div class="border-t border-white/5 pt-4 flex items-center justify-between">
-                <!-- Score Indicator -->
-                <div class="flex items-center gap-2">
-                  <div class="w-8 h-8 rounded-full border border-accent/20 bg-accent/5 flex items-center justify-center font-mono font-bold text-xs text-white">
-                    {playlist.score}
-                  </div>
-                  <div class="flex flex-col">
-                    <span class="text-[8px] uppercase tracking-wider text-accent font-semibold font-mono">Score</span>
-                    <span class="text-[10px] text-zinc-500 leading-none">Quality</span>
-                  </div>
-                </div>
-
-                <span class="text-[9px] uppercase px-2 py-0.5 rounded border border-red-500/20 text-red-400 bg-red-950/10">
-                  Advanced
-                </span>
-              </div>
-            </div>
-
-            <div class="px-6 pb-6 pt-2 flex gap-3">
-              <a href={`/playlist/${playlist.slug}`} class="flex-1 py-2 px-4 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-lg text-center">
-                Start Learning
-              </a>
-            </div>
-          </div>
+          <PlaylistCard playlist={playlist} />
         ))
       )}
     </div>

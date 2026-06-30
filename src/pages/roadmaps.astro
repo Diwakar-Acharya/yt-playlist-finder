@@ -19,13 +19,6 @@ const roadmaps = getRoadmaps();
       <p class="text-xs text-text-secondary mt-1">Goal-oriented tracks that guide you from absolute beginner to production engineering concepts.</p>
     </section>
 
-    <!-- Curated Roadmaps grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-      {roadmaps.map(roadmap => (
-        <RoadmapCard roadmap={roadmap} />
-      ))}
-    </div>
-
     <!-- Dynamic AI Roadmap Generator Section -->
     <section class="glass-panel border border-white/5 rounded-3xl p-6 md:p-8 max-w-3xl mx-auto relative overflow-hidden" id="ai-generator-panel">
       <!-- Background glowing orb -->
@@ -100,6 +93,13 @@ const roadmaps = getRoadmaps();
         </div>
       </div>
     </section>
+
+    <!-- Curated Roadmaps grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {roadmaps.map(roadmap => (
+        <RoadmapCard roadmap={roadmap} />
+      ))}
+    </div>
   </div>
 </Layout>
 
