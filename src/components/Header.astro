@@ -1,0 +1,156 @@
+---
+import { Search, Flame, Code2, Layers, BookOpen, GitCompare, User, Menu, X } from '@lucide/astro';
+
+const pathname = Astro.url.pathname;
+const isActive = (path: string) => {
+  if (path === '/' && pathname === '/') return true;
+  if (path !== '/' && pathname.startsWith(path)) return true;
+  return false;
+};
+---
+
+<header class="sticky top-0 z-50 w-full h-16 glass-panel border-b border-white/5 flex items-center justify-between px-6 md:px-12">
+  <div class="flex items-center gap-8">
+    <!-- Logo -->
+    <a href="/" class="flex items-center group">
+      <img src="/favicon.svg" alt="ListsEasy Logo" class="w-8 h-8 group-hover:scale-105 transition-transform" />
+    </a>
+
+    <!-- Nav Links -->
+    <nav class="hidden lg:flex items-center gap-1 text-xs font-medium">
+      <a 
+        href="/" 
+        class={`px-3 py-1.5 rounded-full transition-colors ${isActive('/') && !pathname.includes('roadmaps') && !pathname.includes('trending') && !pathname.includes('categories') && !pathname.includes('about') && !pathname.includes('contact') ? 'text-white bg-white/5' : 'text-text-secondary hover:text-white hover:bg-white/5'}`}
+      >
+        Home
+      </a>
+      <a 
+        href="/roadmaps" 
+        class={`px-3 py-1.5 rounded-full transition-colors ${isActive('/roadmaps') ? 'text-white bg-white/5' : 'text-text-secondary hover:text-white hover:bg-white/5'}`}
+      >
+        Topics
+      </a>
+      <a 
+        href="/trending" 
+        class={`px-3 py-1.5 rounded-full transition-colors ${isActive('/trending') ? 'text-white bg-white/5' : 'text-text-secondary hover:text-white hover:bg-white/5'}`}
+      >
+        Trending
+      </a>
+      <a 
+        href="/categories" 
+        class={`px-3 py-1.5 rounded-full transition-colors ${isActive('/categories') ? 'text-white bg-white/5' : 'text-text-secondary hover:text-white hover:bg-white/5'}`}
+      >
+        Categories
+      </a>
+      <a 
+        href="/about" 
+        class={`px-3 py-1.5 rounded-full transition-colors ${isActive('/about') ? 'text-white bg-white/5' : 'text-text-secondary hover:text-white hover:bg-white/5'}`}
+      >
+        About
+      </a>
+      <a 
+        href="/contact" 
+        class={`px-3 py-1.5 rounded-full transition-colors ${isActive('/contact') ? 'text-white bg-white/5' : 'text-text-secondary hover:text-white hover:bg-white/5'}`}
+      >
+        Contact
+      </a>
+    </nav>
+  </div>
+
+  <div class="flex items-center gap-4">
+    <!-- Streak Widget -->
+    <div id="streak-container" class="hidden sm:flex items-center gap-1 bg-zinc-900/60 border border-white/5 rounded-full py-1 px-3 text-xs text-orange-500 font-mono font-medium shadow-[0_0_10px_rgba(249,115,22,0.05)]">
+      <Flame class="w-4 h-4 fill-orange-500/10 animate-pulse" />
+      <span id="streak-count">0</span> Day Streak
+    </div>
+
+    <!-- Profile button / CTA -->
+    <a 
+      href="/profile" 
+      class={`p-2 rounded-full border transition-all ${isActive('/profile') ? 'border-accent bg-accent/10 text-white' : 'border-white/5 bg-zinc-900/60 text-text-secondary hover:text-white hover:border-white/10'}`}
+      title="View Learning Profile"
+    >
+      <User class="w-4 h-4" />
+    </a>
+  </div>
+</header>
+
+<!-- Mobile Nav Drawer Trigger (For small devices, can be client toggled) -->
+<div class="md:hidden fixed bottom-6 right-6 z-50">
+  <button 
+    id="mobile-nav-toggle"
+    class="w-12 h-12 rounded-full bg-accent text-white flex items-center justify-center shadow-[0_0_20px_rgba(109,94,247,0.4)] border border-white/10 hover:scale-105 active:scale-95 transition-transform"
+  >
+    <Menu id="menu-icon" class="w-5 h-5" />
+    <X id="close-icon" class="w-5 h-5 hidden" />
+  </button>
+</div>
+
+<!-- Mobile Navigation Drawer Overlay -->
+<div 
+  id="mobile-menu" 
+  class="fixed inset-0 bg-black/95 z-40 hidden flex-col justify-center items-center gap-8 transition-opacity duration-300 opacity-0"
+>
+  <nav class="flex flex-col gap-6 text-xl text-center">
+    <a href="/" class={`transition-colors py-2 ${pathname === '/' ? 'text-accent font-bold' : 'text-text-secondary hover:text-white'}`}>Search Playlists</a>
+    <a href="/roadmaps" class={`transition-colors py-2 ${pathname.startsWith('/roadmaps') ? 'text-accent font-bold' : 'text-text-secondary hover:text-white'}`}>Curated Roadmaps</a>
+    <a href="/compare" class={`transition-colors py-2 ${pathname.startsWith('/compare') ? 'text-accent font-bold' : 'text-text-secondary hover:text-white'}`}>AI Compare Tool</a>
+    <a href="/dashboard" class={`transition-colors py-2 ${pathname.startsWith('/dashboard') ? 'text-accent font-bold' : 'text-text-secondary hover:text-white'}`}>Dashboard</a>
+    <a href="/profile" class={`transition-colors py-2 ${pathname.startsWith('/profile') ? 'text-accent font-bold' : 'text-text-secondary hover:text-white'}`}>My Profile</a>
+  </nav>
+</div>
+
+<script>
+  // Dynamic Mobile Menu Script
+  const toggle = document.getElementById('mobile-nav-toggle');
+  const menu = document.getElementById('mobile-menu');
+  const menuIcon = document.getElementById('menu-icon');
+  const closeIcon = document.getElementById('close-icon');
+
+  if (toggle && menu) {
+    toggle.addEventListener('click', () => {
+      const isHidden = menu.classList.contains('hidden');
+      if (isHidden) {
+        menu.classList.remove('hidden');
+        setTimeout(() => {
+          menu.classList.add('opacity-100');
+          menu.classList.remove('opacity-0');
+        }, 10);
+        menuIcon?.classList.add('hidden');
+        closeIcon?.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      } else {
+        menu.classList.add('opacity-0');
+        menu.classList.remove('opacity-100');
+        setTimeout(() => {
+          menu.classList.add('hidden');
+        }, 300);
+        menuIcon?.classList.remove('hidden');
+        closeIcon?.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+      }
+    });
+
+    // Close on link click
+    const links = menu.querySelectorAll('a');
+    links.forEach(link => {
+      link.addEventListener('click', () => {
+        menu.classList.add('opacity-0');
+        menu.classList.remove('opacity-100');
+        setTimeout(() => {
+          menu.classList.add('hidden');
+        }, 300);
+        menuIcon?.classList.remove('hidden');
+        closeIcon?.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+      });
+    });
+  }
+
+  // Load streak from localStorage
+  const streakCount = document.getElementById('streak-count');
+  if (streakCount) {
+    let streak = parseInt(localStorage.getItem('streak') || '0', 10);
+    streakCount.textContent = streak.toString();
+  }
+</script>

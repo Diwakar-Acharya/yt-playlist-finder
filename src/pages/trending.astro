@@ -1,0 +1,104 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { PLAYLISTS } from '../lib/db';
+import { Flame, Star, Award } from '@lucide/astro';
+
+const trendingPlaylists = [...PLAYLISTS].sort((a, b) => b.score - a.score);
+
+const breadcrumbs = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://youtubeplaylistfinder.com/" },
+    { "@type": "ListItem", "position": 2, "name": "Trending", "item": "https://youtubeplaylistfinder.com/trending" }
+  ]
+};
+
+const getDifficultyBadge = (diff: string) => {
+  if (diff === 'Beginner') return 'border-emerald-500/20 text-emerald-400 bg-emerald-950/10';
+  if (diff === 'Intermediate') return 'border-yellow-500/20 text-yellow-400 bg-yellow-950/10';
+  return 'border-red-500/20 text-red-400 bg-red-950/10';
+};
+---
+
+<Layout 
+  title="Trending YouTube Playlists - Weekly Leaderboard | youtubeplaylistfinder"
+  description="Discover the weekly trending study YouTube playlists. View the top-voted video courses in programming, science, and design."
+  canonical="https://youtubeplaylistfinder.com/trending"
+  schema={breadcrumbs}
+>
+  <div class="space-y-12">
+    <!-- Header -->
+    <section class="border-b border-white/5 pb-6">
+      <div class="flex items-center gap-2">
+        <span class="p-1 rounded bg-orange-950/30 border border-orange-500/20 text-orange-500">
+          <Flame class="w-5 h-5 fill-orange-500/10 animate-pulse" />
+        </span>
+        <div>
+          <span class="text-[10px] font-mono uppercase tracking-wider text-orange-500 font-semibold">Weekly Hotlist</span>
+          <h1 class="text-3xl font-bold tracking-tight text-white mt-1">Trending Learning Playlists</h1>
+        </div>
+      </div>
+      <p class="text-xs text-text-secondary mt-2">The most bookmarked and completed video curricula active in our self-education catalog today.</p>
+    </section>
+
+    <!-- Leaderboard cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {trendingPlaylists.map((playlist, idx) => (
+        <div class="group glass-panel rounded-2xl overflow-hidden glass-panel-hover flex flex-col justify-between h-full relative">
+          <!-- Rank Badge -->
+          <div class="absolute top-3 right-3 z-20 px-2.5 py-1 rounded-md bg-black/80 border border-white/10 text-xs font-mono font-bold text-accent">
+            Rank #{idx + 1}
+          </div>
+
+          <div class="relative w-full aspect-video overflow-hidden border-b border-white/5 bg-zinc-950">
+            <img src={playlist.thumbnail} alt={playlist.title} class="w-full h-full object-cover opacity-75 group-hover:scale-105 group-hover:opacity-90 transition-all duration-300" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+            
+            <div class="absolute bottom-3 left-3 flex items-center gap-2 z-10">
+              <span class="px-2.5 py-0.5 rounded-full bg-black/75 border border-white/5 text-[10px] font-mono text-white flex items-center gap-1">
+                {playlist.videoCount} videos
+              </span>
+              <span class="px-2.5 py-0.5 rounded-full bg-black/75 border border-white/5 text-[10px] font-mono text-white flex items-center gap-1">
+                {playlist.durationHours} hours
+              </span>
+            </div>
+          </div>
+
+          <div class="p-6 flex-1 flex flex-col justify-between">
+            <div>
+              <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500">{playlist.channel}</span>
+              <h2 class="text-base font-bold tracking-tight text-white line-clamp-2 mt-1 leading-snug group-hover:text-accent transition-colors">
+                <a href={`/playlist/${playlist.slug}`}>{playlist.title}</a>
+              </h2>
+              <p class="text-xs text-zinc-400 line-clamp-2 leading-relaxed mt-2 mb-4">{playlist.description}</p>
+            </div>
+
+            <div class="border-t border-white/5 pt-4 flex items-center justify-between">
+              <!-- Score Indicator -->
+              <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full border border-accent/20 bg-accent/5 flex items-center justify-center font-mono font-bold text-xs text-white">
+                  {playlist.score}
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-[8px] uppercase tracking-wider text-accent font-semibold font-mono">Score</span>
+                  <span class="text-[10px] text-zinc-500 leading-none">Quality</span>
+                </div>
+              </div>
+
+              <span class={`text-[9px] uppercase px-2 py-0.5 rounded border ${getDifficultyBadge(playlist.difficulty)}`}>
+                {playlist.difficulty}
+              </span>
+            </div>
+          </div>
+
+          <div class="px-6 pb-6 pt-2 flex gap-3">
+            <a href={`/playlist/${playlist.slug}`} class="flex-1 py-2 px-4 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-lg text-center">
+              Start Learning
+            </a>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</Layout>

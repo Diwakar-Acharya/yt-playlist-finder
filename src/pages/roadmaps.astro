@@ -1,0 +1,274 @@
+---
+import Layout from '../layouts/Layout.astro';
+import RoadmapCard from '../components/RoadmapCard.astro';
+import { getRoadmaps } from '../lib/api';
+import { Sparkles, CheckSquare, Search, RefreshCw, ArrowRight } from '@lucide/astro';
+
+const roadmaps = getRoadmaps();
+---
+
+<Layout 
+  title="Curated Learning Roadmaps | EasyTubeList"
+  description="Structured pathways linking scored YouTube playlists from beginner syntax concepts to deep deployment algorithms."
+>
+  <div class="space-y-12">
+    <!-- Page Header -->
+    <section class="border-b border-white/5 pb-6">
+      <span class="text-[10px] font-mono uppercase tracking-wider text-text-muted">Structured Pathways</span>
+      <h1 class="text-3xl font-bold tracking-tight text-white mt-1">Curated Roadmaps</h1>
+      <p class="text-xs text-text-secondary mt-1">Goal-oriented tracks that guide you from absolute beginner to production engineering concepts.</p>
+    </section>
+
+    <!-- Curated Roadmaps grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {roadmaps.map(roadmap => (
+        <RoadmapCard roadmap={roadmap} />
+      ))}
+    </div>
+
+    <!-- Dynamic AI Roadmap Generator Section -->
+    <section class="glass-panel border border-white/5 rounded-3xl p-6 md:p-8 max-w-3xl mx-auto relative overflow-hidden" id="ai-generator-panel">
+      <!-- Background glowing orb -->
+      <div class="absolute -right-24 -top-24 w-48 h-48 rounded-full bg-accent/10 blur-3xl pointer-events-none"></div>
+
+      <!-- Main Input View -->
+      <div id="ai-input-view" class="space-y-6 relative z-10 text-center md:text-left">
+        <div class="flex flex-col md:flex-row items-center gap-4">
+          <div class="w-12 h-12 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0">
+            <Sparkles class="w-6 h-6 animate-pulse" />
+          </div>
+          <div>
+            <h3 class="text-lg font-bold tracking-tight text-white">AI Custom Roadmap Generator</h3>
+            <p class="text-xs text-text-secondary mt-0.5">Input any topic or skill to instantly design a detailed, step-by-step learning pathway from A to Z.</p>
+          </div>
+        </div>
+
+        <form id="ai-roadmap-form" class="flex flex-col sm:flex-row gap-3 mt-4">
+          <div class="relative flex-1">
+            <Search class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+            <input 
+              type="text" 
+              id="ai-topic-input"
+              required
+              placeholder="Enter any topic (e.g. Kubernetes, Rust, Organic Chemistry, UPSC Economics)..."
+              class="w-full pl-11 pr-4 py-3 rounded-2xl bg-zinc-950 border border-white/10 text-xs text-white placeholder-text-muted focus:outline-none focus:border-accent transition-colors"
+            />
+          </div>
+          <button 
+            type="submit"
+            class="px-6 py-3 rounded-2xl bg-accent hover:bg-opacity-95 text-white text-xs font-semibold hover:scale-98 transition-transform cursor-pointer flex items-center justify-center gap-2 whitespace-nowrap"
+          >
+            Generate Roadmap <ArrowRight class="w-3.5 h-3.5" />
+          </button>
+        </form>
+      </div>
+
+      <!-- Loading Progression Screen -->
+      <div id="ai-loading-view" class="hidden flex-col items-center justify-center py-10 space-y-6 text-center">
+        <div class="relative w-16 h-16 flex items-center justify-center">
+          <div class="absolute inset-0 rounded-full border-2 border-accent/20 border-t-accent animate-spin"></div>
+          <Sparkles class="w-6 h-6 text-accent" />
+        </div>
+        <div class="space-y-1">
+          <h4 class="text-sm font-semibold text-white" id="loading-status-title">Formulating Curriculum...</h4>
+          <p class="text-[10px] text-text-muted font-mono" id="loading-status-meta">Analyzing prerequisites...</p>
+        </div>
+        <!-- Simulated progress line -->
+        <div class="w-48 h-1 bg-zinc-900 rounded-full overflow-hidden border border-white/5">
+          <div class="h-full bg-accent w-0 transition-all duration-500" id="loading-progress-bar"></div>
+        </div>
+      </div>
+
+      <!-- Result View -->
+      <div id="ai-result-view" class="hidden space-y-8 relative z-10">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
+          <div>
+            <span class="px-2 py-0.5 rounded-full border border-emerald-500/20 bg-emerald-950/10 text-[9px] font-mono text-emerald-400 font-semibold uppercase tracking-wider">AI Generated Pathway</span>
+            <h3 class="text-xl font-bold tracking-tight text-white mt-1.5" id="result-topic-title">Kubernetes Roadmap</h3>
+          </div>
+          <button 
+            id="reset-generator-btn"
+            class="px-3.5 py-1.5 rounded-xl border border-white/10 hover:bg-zinc-900 text-text-secondary hover:text-white text-[10px] font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <RefreshCw class="w-3 h-3" /> Reset Generator
+          </button>
+        </div>
+
+        <!-- Detailed Modules List (Timeline format) -->
+        <div class="relative border-l border-white/5 pl-6 ml-3 space-y-8" id="roadmap-modules-container">
+          <!-- Dynamic Steps inserted here -->
+        </div>
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<script is:inline>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('ai-roadmap-form');
+    const input = document.getElementById('ai-topic-input');
+    
+    const inputView = document.getElementById('ai-input-view');
+    const loadingView = document.getElementById('ai-loading-view');
+    const resultView = document.getElementById('ai-result-view');
+    
+    const statusTitle = document.getElementById('loading-status-title');
+    const statusMeta = document.getElementById('loading-status-meta');
+    const progressBar = document.getElementById('loading-progress-bar');
+    
+    const resultTitle = document.getElementById('result-topic-title');
+    const modulesContainer = document.getElementById('roadmap-modules-container');
+    const resetBtn = document.getElementById('reset-generator-btn');
+
+    if (!form || !input) return;
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const topic = input.value.trim();
+      if (!topic) return;
+
+      // Enter Loading State
+      inputView.classList.add('hidden');
+      loadingView.classList.remove('hidden');
+      loadingView.classList.add('flex');
+
+      const statuses = [
+        { title: 'Formulating Curriculum...', meta: 'Parsing parameter requirements', percent: '25%' },
+        { title: 'Mapping Prerequisites...', meta: 'Setting up initial foundation modules', percent: '50%' },
+        { title: 'Deduplicating Structures...', meta: 'Sorting playlist sequence hierarchy', percent: '75%' },
+        { title: 'Finalizing Roadmap...', meta: 'Covering from A to Z details', percent: '100%' }
+      ];
+
+      let step = 0;
+      const interval = setInterval(() => {
+        if (step < statuses.length) {
+          const current = statuses[step];
+          statusTitle.textContent = current.title;
+          statusMeta.textContent = current.meta;
+          progressBar.style.width = current.percent;
+          step++;
+        } else {
+          clearInterval(interval);
+          renderRoadmap(topic);
+        }
+      }, 600);
+    });
+
+    function renderRoadmap(topic) {
+      // Transition from Loading to Results
+      loadingView.classList.remove('flex');
+      loadingView.classList.add('hidden');
+      resultView.classList.remove('hidden');
+
+      const titleCaseTopic = topic.charAt(0).toUpperCase() + topic.slice(1);
+      resultTitle.textContent = `${titleCaseTopic} Syllabus Roadmap`;
+
+      // Generate dynamic detailed A-Z roadmap milestones
+      const steps = [
+        {
+          num: 1,
+          title: 'Prerequisite Foundations & Terminology',
+          description: `Acquire the initial foundational guidelines, keywords, local environment setups, and structural logic metrics for ${titleCaseTopic}.`,
+          bullets: [
+            'Download, install, and execute initial environment binaries.',
+            'Understand basic variables declaration, loops, and logic blocks.',
+            'Analyze structural architecture guidelines and parameters.',
+            'Run a simple local test workspace to verify installation.'
+          ]
+        },
+        {
+          num: 2,
+          title: 'Core Fundamentals & Program Flow Control',
+          description: `Dive deep into variable types, control execution patterns, conditional triggers, and core scripting concepts for ${titleCaseTopic}.`,
+          bullets: [
+            'Create data interfaces, dictionary lists, and index arrays.',
+            'Utilize looping utilities to traverse data blocks.',
+            'Handle syntax errors, try-catch triggers, and exceptions.',
+            'Design utility methods to encapsulate functional instructions.'
+          ]
+        },
+        {
+          num: 3,
+          title: 'Intermediate Integrations & Architecture Modules',
+          description: `Build complete functional units, test modules, and compile configurations within ${titleCaseTopic}.`,
+          bullets: [
+            'Construct Object-Oriented layouts (Classes, Interfaces).',
+            'Incorporate unit testing frameworks to validate code coverage.',
+            'Execute asynchronous event handling and fetch structures.',
+            'Trace telemetry and debug runtime system exceptions.'
+          ]
+        },
+        {
+          num: 4,
+          title: 'Production Frameworks & System Databases',
+          description: `Scale ${titleCaseTopic} elements by linking databases, REST APIs, and containerized architectures.`,
+          bullets: [
+            'Design relational database models and schema entities.',
+            'Compose API interfaces supporting CRUD network requests.',
+            'Manage user sessions, security authorizations, and tokens.',
+            'Setup automated builds and code checking integrations.'
+          ]
+        },
+        {
+          num: 5,
+          title: 'Enterprise Deployment & Performance Scaling',
+          description: `Secure, optimize, scale, and host complex systems built with ${titleCaseTopic} for production-grade scale.`,
+          bullets: [
+            'Containerize application spaces using Docker and orchestration tools.',
+            'Build caching systems to load-balance high request volumes.',
+            'Monitor dashboard logs and telemetry parameters in real time.',
+            'Conduct stress tests to tune heap allocations and optimize load.'
+          ]
+        }
+      ];
+
+      modulesContainer.innerHTML = steps.map(step => `
+        <div class="relative group">
+          <!-- Timeline indicator node -->
+          <div class="absolute -left-[30px] top-1 w-4 h-4 rounded-full border border-accent bg-black flex items-center justify-center">
+            <div class="w-1.5 h-1.5 rounded-full bg-accent"></div>
+          </div>
+          
+          <div class="space-y-3">
+            <div>
+              <span class="text-[9px] font-mono uppercase tracking-wider text-accent font-semibold">Step ${step.num} of 5</span>
+              <h4 class="text-sm font-bold text-white tracking-tight mt-0.5">${step.title}</h4>
+              <p class="text-xs text-text-secondary leading-relaxed mt-1">${step.description}</p>
+            </div>
+
+            <!-- Bullet details checklists -->
+            <div class="bg-zinc-950/40 border border-white/5 rounded-2xl p-4 space-y-2">
+              <span class="text-[9px] font-mono uppercase text-zinc-500 block tracking-wider">A-to-Z Detailed Modules:</span>
+              <ul class="space-y-1.5 text-xs text-text-secondary font-mono leading-relaxed">
+                ${step.bullets.map(b => `
+                  <li class="flex items-start gap-2">
+                    <span class="text-accent mt-0.5">•</span>
+                    <span>${b}</span>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+
+            <!-- Recommendation Query link -->
+            <div class="pt-1">
+              <a 
+                href="/?q=${encodeURIComponent(topic)}" 
+                class="inline-flex items-center gap-1 text-[10px] font-mono font-semibold text-accent hover:underline"
+              >
+                Search live ${titleCaseTopic} playlists on EasyTubeList →
+              </a>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    resetBtn.addEventListener('click', () => {
+      // Clear results and restore input view
+      resultView.classList.add('hidden');
+      inputView.classList.remove('hidden');
+      input.value = '';
+      progressBar.style.width = '0%';
+    });
+  });
+</script>

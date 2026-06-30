@@ -1,0 +1,63 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { AlertCircle, ArrowLeft, Search } from '@lucide/astro';
+
+const breadcrumbs = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://youtubeplaylistfinder.com/" },
+    { "@type": "ListItem", "position": 2, "name": "404 Not Found", "item": "https://youtubeplaylistfinder.com/404" }
+  ]
+};
+---
+
+<Layout 
+  title="404 - Page Not Found | youtubeplaylistfinder"
+  description="The requested page could not be found. Return to the homepage to search ranked YouTube study playlists."
+  canonical="https://youtubeplaylistfinder.com/404"
+  robots="noindex, nofollow"
+  schema={breadcrumbs}
+>
+  <div class="min-h-[60vh] flex flex-col items-center justify-center text-center px-4 relative overflow-hidden">
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div class="w-[400px] h-[400px] rounded-full bg-accent/5 blur-[100px] -translate-y-12"></div>
+    </div>
+
+    <div class="relative z-10 space-y-6 max-w-md">
+      <!-- Icon Indicator -->
+      <div class="w-16 h-16 rounded-2xl bg-zinc-950 border border-white/5 flex items-center justify-center text-accent mx-auto shadow-inner">
+        <AlertCircle class="w-8 h-8 text-accent animate-pulse" />
+      </div>
+
+      <div class="space-y-2">
+        <span class="text-[10px] font-mono uppercase tracking-wider text-accent font-bold">Error 404</span>
+        <h1 class="text-3xl font-extrabold tracking-tight text-white">Page Not Found</h1>
+        <p class="text-xs text-text-secondary leading-relaxed">
+          The learning path you are looking for has been moved, renamed, or does not exist in our catalog index.
+        </p>
+      </div>
+
+      <!-- Search Box fallback -->
+      <div class="w-full pt-4">
+        <form method="GET" action="/search" class="relative">
+          <Search class="w-4 h-4 text-text-muted absolute left-4 top-1/2 -translate-y-1/2" />
+          <input 
+            type="text" 
+            name="q"
+            required
+            placeholder="Try searching for another topic..." 
+            class="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-950 border border-white/10 text-xs text-white placeholder-text-muted focus:outline-none focus:border-accent transition-colors"
+          />
+        </form>
+      </div>
+
+      <!-- CTA buttons -->
+      <div class="flex items-center justify-center gap-4 pt-2">
+        <a href="/" class="px-5 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold hover:scale-98 transition-transform inline-flex items-center gap-1.5 shadow-lg">
+          <ArrowLeft class="w-3.5 h-3.5" /> Return Home
+        </a>
+      </div>
+    </div>
+  </div>
+</Layout>

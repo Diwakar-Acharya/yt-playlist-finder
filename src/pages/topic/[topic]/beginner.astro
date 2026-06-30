@@ -1,0 +1,108 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import { searchPlaylists } from '../../../lib/api';
+import { ChevronLeft, Award } from '@lucide/astro';
+
+const { topic } = Astro.params;
+if (!topic) {
+  return Astro.redirect('/404');
+}
+
+const cleanTopic = topic.trim().replace(/-/g, ' ');
+const titleCaseTopic = cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1);
+
+const playlists = await searchPlaylists(cleanTopic, { difficulty: 'Beginner' });
+
+// Breadcrumb Schema
+const breadcrumbs = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://youtubeplaylistfinder.com/" },
+    { "@type": "ListItem", "position": 2, "name": titleCaseTopic, "item": `https://youtubeplaylistfinder.com/topic/${topic}` },
+    { "@type": "ListItem", "position": 3, "name": "Beginner Guides", "item": `https://youtubeplaylistfinder.com/topic/${topic}/beginner` }
+  ]
+};
+---
+
+<Layout 
+  title={`Best Beginner ${titleCaseTopic} YouTube Playlists | youtubeplaylistfinder`}
+  description={`Discover introductory beginner-level YouTube playlists for learning ${titleCaseTopic}. Check out Quality Scores, structured syllabi, and study checklists.`}
+  canonical={`https://youtubeplaylistfinder.com/topic/${topic}/beginner`}
+  schema={breadcrumbs}
+>
+  <div class="space-y-8">
+    <div>
+      <a href={`/topic/${topic}`} class="inline-flex items-center gap-1 text-xs text-text-secondary hover:text-white transition-colors">
+        <ChevronLeft class="w-4 h-4" /> Back to {titleCaseTopic} index
+      </a>
+    </div>
+
+    <section class="border-b border-white/5 pb-6">
+      <span class="text-[10px] font-mono uppercase tracking-wider text-emerald-400">Difficulty: Beginner level</span>
+      <h1 class="text-3xl font-bold tracking-tight text-white mt-1">Introductory {titleCaseTopic} Playlists</h1>
+      <p class="text-xs text-text-secondary mt-1">Starting from absolute scratch? These playlists focus on foundations, core syntax, environment setup, and basic walkthroughs.</p>
+    </section>
+
+    <!-- Playlist list grids -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {playlists.length === 0 ? (
+        <div class="col-span-full py-16 text-center border border-dashed border-white/5 rounded-2xl">
+          <h3 class="text-sm font-semibold text-white">No beginner playlists found for {titleCaseTopic}</h3>
+          <p class="text-xs text-text-muted mt-1 max-w-sm mx-auto">We couldn't locate any beginner courses right now. Go back to homepage and search to scrape them live.</p>
+        </div>
+      ) : (
+        playlists.map(playlist => (
+          <div class="group glass-panel rounded-2xl overflow-hidden glass-panel-hover flex flex-col justify-between h-full relative">
+            <div class="relative w-full aspect-video overflow-hidden border-b border-white/5 bg-zinc-950">
+              <img src={playlist.thumbnail} alt={playlist.title} class="w-full h-full object-cover opacity-75 group-hover:scale-105 group-hover:opacity-90 transition-all duration-300" />
+              <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+              
+              <div class="absolute bottom-3 left-3 flex items-center gap-2 z-10">
+                <span class="px-2.5 py-0.5 rounded-full bg-black/75 border border-white/5 text-[10px] font-mono text-white flex items-center gap-1">
+                  {playlist.videoCount} videos
+                </span>
+                <span class="px-2.5 py-0.5 rounded-full bg-black/75 border border-white/5 text-[10px] font-mono text-white flex items-center gap-1">
+                  {playlist.durationHours} hours
+                </span>
+              </div>
+            </div>
+
+            <div class="p-6 flex-1 flex flex-col justify-between">
+              <div>
+                <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500">{playlist.channel}</span>
+                <h2 class="text-base font-bold tracking-tight text-white line-clamp-2 mt-1 leading-snug group-hover:text-accent transition-colors">
+                  <a href={`/playlist/${playlist.slug}`}>{playlist.title}</a>
+                </h2>
+                <p class="text-xs text-zinc-400 line-clamp-2 leading-relaxed mt-2 mb-4">{playlist.description}</p>
+              </div>
+
+              <div class="border-t border-white/5 pt-4 flex items-center justify-between">
+                <!-- Score Indicator -->
+                <div class="flex items-center gap-2">
+                  <div class="w-8 h-8 rounded-full border border-accent/20 bg-accent/5 flex items-center justify-center font-mono font-bold text-xs text-white">
+                    {playlist.score}
+                  </div>
+                  <div class="flex flex-col">
+                    <span class="text-[8px] uppercase tracking-wider text-accent font-semibold font-mono">Score</span>
+                    <span class="text-[10px] text-zinc-500 leading-none">Quality</span>
+                  </div>
+                </div>
+
+                <span class="text-[9px] uppercase px-2 py-0.5 rounded border border-emerald-500/20 text-emerald-400 bg-emerald-950/10">
+                  Beginner
+                </span>
+              </div>
+            </div>
+
+            <div class="px-6 pb-6 pt-2 flex gap-3">
+              <a href={`/playlist/${playlist.slug}`} class="flex-1 py-2 px-4 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-lg text-center">
+                Start Learning
+              </a>
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  </div>
+</Layout>

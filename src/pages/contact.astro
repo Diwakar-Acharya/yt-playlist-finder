@@ -1,0 +1,123 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Mail, HelpCircle, ChevronRight, MessageSquare, ShieldAlert, Award } from '@lucide/astro';
+
+const breadcrumbs = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://youtubeplaylistfinder.com/" },
+    { "@type": "ListItem", "position": 2, "name": "Contact Us", "item": "https://youtubeplaylistfinder.com/contact" }
+  ]
+};
+---
+
+<Layout 
+  title="Contact Us & Feedback | youtubeplaylistfinder"
+  description="Contact the youtubeplaylistfinder curation staff. Submit feedback, partnership inquiries, or report playlist errors."
+  canonical="https://youtubeplaylistfinder.com/contact"
+  schema={breadcrumbs}
+>
+  <div class="space-y-12">
+    <!-- Header -->
+    <section class="border-b border-white/5 pb-6">
+      <span class="text-[10px] font-mono uppercase tracking-wider text-text-muted">Get In Touch</span>
+      <h1 class="text-3xl font-bold tracking-tight text-white mt-1">Contact & Support</h1>
+      <p class="text-xs text-text-secondary mt-1">We welcome feedback, channel listing requests, partnership offers, and metadata corrections.</p>
+    </section>
+
+    <!-- Layout Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      <!-- Forms Section -->
+      <div class="lg:col-span-2 space-y-6">
+        <div class="glass-panel rounded-3xl p-6 md:p-8 border border-white/5">
+          <h2 class="text-base font-bold text-white mb-6 flex items-center gap-2">
+            <MessageSquare class="w-5 h-5 text-accent" /> Submit Contact Inquiry
+          </h2>
+
+          <form class="space-y-4 text-xs text-left" onsubmit="event.preventDefault(); alert('Message sent successfully!');">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="space-y-1.5">
+                <label for="contact-name" class="font-mono text-[10px] uppercase text-text-muted block">Full Name</label>
+                <input 
+                  type="text" 
+                  id="contact-name" 
+                  required
+                  placeholder="Diana Miller"
+                  class="w-full px-3 py-2.5 rounded-xl bg-zinc-950 border border-white/10 text-white placeholder-text-muted focus:outline-none focus:border-accent"
+                />
+              </div>
+              <div class="space-y-1.5">
+                <label for="contact-email" class="font-mono text-[10px] uppercase text-text-muted block">Email Address</label>
+                <input 
+                  type="email" 
+                  id="contact-email" 
+                  required
+                  placeholder="diana@example.com"
+                  class="w-full px-3 py-2.5 rounded-xl bg-zinc-950 border border-white/10 text-white placeholder-text-muted focus:outline-none focus:border-accent"
+                />
+              </div>
+            </div>
+
+            <div class="space-y-1.5">
+              <label for="contact-subject" class="font-mono text-[10px] uppercase text-text-muted block">Inquiry Type</label>
+              <select 
+                id="contact-subject" 
+                class="w-full bg-zinc-950 border border-white/10 text-white rounded-xl py-2.5 px-3 focus:outline-none focus:border-accent"
+              >
+                <option value="feedback">General Feedback & Ideas</option>
+                <option value="report">Report Playlist Details Error</option>
+                <option value="partner">Partnership or Listing Request</option>
+                <option value="other">Other Inquiry</option>
+              </select>
+            </div>
+
+            <div class="space-y-1.5">
+              <label for="contact-msg" class="font-mono text-[10px] uppercase text-text-muted block">Your Message</label>
+              <textarea 
+                id="contact-msg" 
+                rows="5"
+                required
+                placeholder="Write your details or error logs here..."
+                class="w-full px-3 py-2.5 rounded-xl bg-zinc-950 border border-white/10 text-white placeholder-text-muted focus:outline-none focus:border-accent leading-relaxed"
+              ></textarea>
+            </div>
+
+            <button 
+              type="submit" 
+              class="w-full py-3 rounded-2xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold hover:scale-98 transition-transform cursor-pointer"
+            >
+              Send Message
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Context Sidebar -->
+      <aside class="space-y-6">
+        <div class="glass-panel rounded-2xl p-6 border border-white/5 space-y-4 text-left">
+          <h3 class="text-xs font-mono uppercase tracking-wider text-white">Direct Channels</h3>
+          
+          <div class="space-y-3 text-xs text-text-secondary">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-lg bg-zinc-900 border border-white/10 flex items-center justify-center text-text-secondary shrink-0">
+                <Mail class="w-4 h-4" />
+              </div>
+              <div>
+                <span class="text-[9px] font-mono uppercase text-text-muted block">Support Email</span>
+                <a href="mailto:support@youtubeplaylistfinder.com" class="text-white hover:underline">support@youtubeplaylistfinder.com</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-panel rounded-2xl p-6 border border-white/5 space-y-4 text-left">
+          <h3 class="text-xs font-mono uppercase tracking-wider text-white">Report Content</h3>
+          <p class="text-xs text-text-secondary leading-relaxed">
+            Spotted a broken link or false playlist video outline? Report the slug, and our database validation cron will refresh the parameters within 24 hours.
+          </p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</Layout>

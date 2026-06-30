@@ -1,0 +1,168 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { User, Flame, Award, BookOpen, Clock, Bookmark, Sparkles, CheckCircle2, Users } from '@lucide/astro';
+
+const breadcrumbs = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://youtubeplaylistfinder.com/" },
+    { "@type": "ListItem", "position": 2, "name": "Profile", "item": "https://youtubeplaylistfinder.com/profile" }
+  ]
+};
+---
+
+<Layout 
+  title="My Learning Profile | youtubeplaylistfinder"
+  description="Manage learning streaks, display settings, and monitor course milestone metrics."
+  canonical="https://youtubeplaylistfinder.com/profile"
+  schema={breadcrumbs}
+>
+  <div class="max-w-4xl mx-auto space-y-12">
+    <!-- Profile header -->
+    <section class="flex flex-col sm:flex-row items-center gap-6 border-b border-white/5 pb-8 text-left">
+      <div class="w-20 h-20 rounded-full border border-accent/30 bg-accent/5 flex items-center justify-center text-accent shadow-[0_0_20px_rgba(109,94,247,0.2)]">
+        <User class="w-10 h-10" />
+      </div>
+      
+      <div class="text-center sm:text-left space-y-1">
+        <span class="text-[10px] font-mono uppercase tracking-wider text-text-muted">Astro Student Account</span>
+        <h1 class="text-3xl font-bold tracking-tight text-white" id="profile-display-name">Learner Profile</h1>
+        <p class="text-xs text-text-secondary leading-relaxed">Member since June 2026 • Tracking self-guided study pathways.</p>
+      </div>
+    </section>
+
+    <!-- Stats summary grid -->
+    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="glass-panel rounded-2xl p-5 flex flex-col justify-between text-left">
+        <span class="text-[10px] font-mono uppercase text-text-muted">Learning Streak</span>
+        <div class="flex items-center gap-1.5 mt-2">
+          <Flame class="w-5 h-5 text-orange-500 fill-orange-500/10" />
+          <span class="text-2xl font-bold font-mono text-white" id="profile-streak-val">0</span>
+        </div>
+        <span class="text-[9px] text-text-muted mt-2 block">Days active</span>
+      </div>
+
+      <div class="glass-panel rounded-2xl p-5 flex flex-col justify-between text-left">
+        <span class="text-[10px] font-mono uppercase text-text-muted">Bookmarks</span>
+        <div class="flex items-center gap-1.5 mt-2">
+          <Bookmark class="w-5 h-5 text-accent" />
+          <span class="text-2xl font-bold font-mono text-white" id="profile-saved-val">0</span>
+        </div>
+        <span class="text-[9px] text-text-muted mt-2 block">Tracks in library</span>
+      </div>
+
+      <div class="glass-panel rounded-2xl p-5 flex flex-col justify-between text-left">
+        <span class="text-[10px] font-mono uppercase text-text-muted">Completed Videos</span>
+        <div class="flex items-center gap-1.5 mt-2">
+          <CheckCircle2 class="w-5 h-5 text-emerald-500" />
+          <span class="text-2xl font-bold font-mono text-white" id="profile-completed-val">0</span>
+        </div>
+        <span class="text-[9px] text-text-muted mt-2 block">Marked finished</span>
+      </div>
+
+      <div class="glass-panel rounded-2xl p-5 flex flex-col justify-between text-left">
+        <span class="text-[10px] font-mono uppercase text-text-muted">Total Hours</span>
+        <div class="flex items-center gap-1.5 mt-2">
+          <Clock class="w-5 h-5 text-indigo-400" />
+          <span class="text-2xl font-bold font-mono text-white" id="profile-hours-val">0</span>
+        </div>
+        <span class="text-[9px] text-text-muted mt-2 block">Spent learning</span>
+      </div>
+    </section>
+
+    <!-- Display Name Settings Form -->
+    <section class="glass-panel border border-white/5 rounded-3xl p-6 md:p-8 space-y-6">
+      <div class="border-b border-white/5 pb-3 text-left">
+        <h2 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+          <Users class="w-4 h-4 text-accent" /> Profile Settings
+        </h2>
+        <p class="text-xs text-text-muted mt-0.5 font-sans">Customize your student display name. This information is saved locally in your browser cache.</p>
+      </div>
+
+      <form id="profile-name-form" class="space-y-4 max-w-sm text-left text-xs">
+        <div class="space-y-1.5">
+          <label for="learner-name-input" class="font-mono text-[10px] uppercase text-text-muted block font-semibold">Your Display Name</label>
+          <div class="flex gap-2">
+            <input 
+              type="text" 
+              id="learner-name-input" 
+              required
+              placeholder="Enter your name..."
+              class="flex-1 px-3 py-2.5 rounded-xl bg-zinc-950 border border-white/10 text-white placeholder-text-muted focus:outline-none focus:border-accent"
+            />
+            <button 
+              type="submit" 
+              class="px-4 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black font-semibold hover:scale-98 transition-transform cursor-pointer"
+            >
+              Save Name
+            </button>
+          </div>
+        </div>
+      </form>
+    </section>
+  </div>
+</Layout>
+
+<script>
+  // Simple client-side stats & identity manager
+  document.addEventListener('DOMContentLoaded', () => {
+    const streakVal = document.getElementById('profile-streak-val');
+    const savedVal = document.getElementById('profile-saved-val');
+    const completedVal = document.getElementById('profile-completed-val');
+    const hoursVal = document.getElementById('profile-hours-val');
+    
+    const nameForm = document.getElementById('profile-name-form');
+    const nameInput = document.getElementById('learner-name-input') as HTMLInputElement;
+    const displayName = document.getElementById('profile-display-name');
+
+    // Sync stats
+    function syncStats() {
+      if (streakVal) {
+        streakVal.textContent = (localStorage.getItem('streak') || '0').toString();
+      }
+
+      if (savedVal) {
+        let saved = [];
+        try {
+          saved = JSON.parse(localStorage.getItem('savedPlaylists') || '[]');
+        } catch {
+          saved = [];
+        }
+        savedVal.textContent = saved.length.toString();
+      }
+
+      if (completedVal) {
+        completedVal.textContent = (localStorage.getItem('totalCompletedVideos') || '0').toString();
+      }
+
+      if (hoursVal) {
+        hoursVal.textContent = (localStorage.getItem('totalHoursWatched') || '0').toString();
+      }
+    }
+
+    // Sync Name Identity
+    function syncIdentity() {
+      if (nameForm && nameInput && displayName) {
+        const savedName = localStorage.getItem('learnerName');
+        if (savedName) {
+          displayName.textContent = savedName;
+          nameInput.value = savedName;
+        }
+
+        nameForm.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const value = nameInput.value.trim();
+          if (value) {
+            localStorage.setItem('learnerName', value);
+            displayName.textContent = value;
+            alert('Display name updated successfully!');
+          }
+        });
+      }
+    }
+
+    syncStats();
+    syncIdentity();
+  });
+</script>

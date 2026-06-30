@@ -1,23 +1,134 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  canonical?: string;
+  robots?: string;
+  schema?: Record<string, any> | Array<Record<string, any>>;
+  ogType?: string;
+}
+
+const { 
+  title = "youtubeplaylistfinder | Free YouTube Playlist Finder", 
+  description = "Discover the absolute best study and educational YouTube playlists. We mathematically rank, review, and score playlists to help you find structured learning paths instantly.",
+  canonical,
+  robots = "index, follow",
+  schema,
+  ogType = "website"
+} = Astro.props;
+
+// Determine current canonical url
+const defaultCanonical = new URL(Astro.url.pathname, "https://youtubeplaylistfinder.com").toString();
+const activeCanonical = canonical || defaultCanonical;
+
+// Default Website & Organization schemas
+const baseWebsiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "youtubeplaylistfinder",
+  "url": "https://youtubeplaylistfinder.com",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://youtubeplaylistfinder.com/?q={search_term_string}",
+    "query-input": "required name=search_term_string"
+  }
+};
+
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "youtubeplaylistfinder",
+  "url": "https://youtubeplaylistfinder.com",
+  "logo": "https://youtubeplaylistfinder.com/favicon-96x96.png",
+  "sameAs": []
+};
+
+// Combine schema list
+const schemaList = [];
+if (schema) {
+  if (Array.isArray(schema)) {
+    schemaList.push(...schema);
+  } else {
+    schemaList.push(schema);
+  }
+} else {
+  schemaList.push(baseWebsiteSchema, organizationSchema);
+}
+---
+
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
-</html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- Google tag (gtag.js) -->
+    <script is:inline async src="https://www.googletagmanager.com/gtag/js?id=G-01EM1V8RB9"></script>
+    <script is:inline>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
+      gtag('config', 'G-01EM1V8RB9');
+    </script>
+    
+    <!-- Favicon Links -->
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-title" content="ListsEasy" />
+    <link rel="manifest" href="/site.webmanifest" />
+    
+    <meta name="generator" content={Astro.generator} />
+    
+    <!-- Meta robots and canonicals -->
+    <meta name="robots" content={robots} />
+    <link rel="canonical" href={activeCanonical} />
+    
+    <!-- Primary Meta Tags -->
+    <title>{title}</title>
+    <meta name="title" content={title} />
+    <meta name="description" content={description} />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={activeCanonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content="https://images.unsplash.com/photo-1527474305487-b87b222841cc?q=80&w=1200&auto=format&fit=crop" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={activeCanonical} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    <meta property="twitter:image" content="https://images.unsplash.com/photo-1527474305487-b87b222841cc?q=80&w=1200&auto=format&fit=crop" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+    <!-- Structured Data Schema Markup -->
+    {schemaList.map(s => (
+      <script type="application/ld+json" set:html={JSON.stringify(s)} />
+    ))}
+  </head>
+  <body class="min-h-screen bg-black text-white relative selection:bg-white selection:text-black antialiased gradient-mesh">
+    <!-- Header -->
+    <Header />
+    
+    <!-- Main Content Grid -->
+    <main class="w-full max-w-7xl mx-auto px-6 md:px-12 py-8 relative z-10">
+      <slot />
+    </main>
+
+    <!-- Footer -->
+    <Footer />
+  </body>
+</html>

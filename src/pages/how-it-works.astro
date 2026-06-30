@@ -1,0 +1,105 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Award, ShieldAlert, Cpu, Heart, CheckCircle2, ChevronRight } from '@lucide/astro';
+
+const breadcrumbs = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://youtubeplaylistfinder.com/" },
+    { "@type": "ListItem", "position": 2, "name": "How It Works", "item": "https://youtubeplaylistfinder.com/how-it-works" }
+  ]
+};
+---
+
+<Layout 
+  title="How Rankings & Curation Scoring Works | youtubeplaylistfinder"
+  description="Learn about the mathematical scoring system we use to audit, grade, and recommend top-quality educational YouTube playlists."
+  canonical="https://youtubeplaylistfinder.com/how-it-works"
+  schema={breadcrumbs}
+>
+  <div class="space-y-12 text-left leading-relaxed max-w-4xl mx-auto">
+    <!-- Header -->
+    <section class="border-b border-white/5 pb-6">
+      <span class="text-[10px] font-mono uppercase tracking-wider text-text-muted">Transparency First</span>
+      <h1 class="text-3xl font-bold tracking-tight text-white mt-1">Our Playlist Scoring Engine</h1>
+      <p class="text-xs text-text-secondary mt-1">Discover the algorithm we use to calculate transparent Quality Scores for self-guided classes.</p>
+    </section>
+
+    <!-- Formula Section -->
+    <section class="glass-panel border-t-2 border-t-accent rounded-3xl p-6 md:p-10 text-center space-y-4">
+      <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full border border-accent/20 bg-accent/5 text-[9px] font-mono text-accent font-bold uppercase tracking-wider">
+        Weight Formula
+      </span>
+      <h2 class="text-xl md:text-3xl font-bold tracking-tight text-white font-mono">
+        Quality Score = R(35) + C(25) + S(20) + A(10) + U(10)
+      </h2>
+      <p class="text-xs text-text-secondary max-w-xl mx-auto leading-relaxed">
+        Our scoring engine audits thousands of metadata outlines using Google YouTube API channels. Every playlist is scored out of 100 based on five core signals.
+      </p>
+    </section>
+
+    <!-- Factors Detail Grid -->
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6">
+      <div class="space-y-4">
+        <h3 class="text-sm font-semibold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+          <Heart class="w-4 h-4 text-accent" /> 1. User Reviews & Ratings (35%)
+        </h3>
+        <p class="text-xs text-text-secondary">
+          We collect ratings, completion reports, and content reviews from self-taught developers and learners on our platform. Reviews are parsed to evaluate lecture clarity, instructor audio quality, syllabus pace, and code repositories accuracy.
+        </p>
+      </div>
+
+      <div class="space-y-4">
+        <h3 class="text-sm font-semibold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+          <CheckCircle2 class="w-4 h-4 text-accent" /> 2. Completion Metrics (25%)
+        </h3>
+        <p class="text-xs text-text-secondary">
+          Derived from client-side checklist data. By tracking what percentage of students bookmark a course, check off lectures, and complete the full checklist, we calculate learning retention and overall list usefulness.
+        </p>
+      </div>
+
+      <div class="space-y-4">
+        <h3 class="text-sm font-semibold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+          <Cpu class="w-4 h-4 text-accent" /> 3. Playlist Structure (20%)
+        </h3>
+        <p class="text-xs text-text-secondary">
+          Our parser evaluates chronological sequence coherence. Playlists receive penalties for containing duplicate videos, unrelated clips (like announcement vlogs or promotional ads), and disorganized timelines.
+        </p>
+      </div>
+
+      <div class="space-y-4">
+        <h3 class="text-sm font-semibold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+          <Award class="w-4 h-4 text-accent" /> 4. Authority & Activity (20%)
+        </h3>
+        <p class="text-xs text-text-secondary">
+          Measures creator subscriber scale and update frequency (10% each). Courses published by active channels who regularly update their playlists receive a ranking boost compared to abandoned archives.
+        </p>
+      </div>
+    </section>
+
+    <!-- Penalties Section -->
+    <section class="glass-panel rounded-2xl p-6 border border-white/5 space-y-4 text-left mt-8">
+      <h3 class="text-sm font-semibold text-white uppercase tracking-wider font-mono flex items-center gap-2">
+        <ShieldAlert class="w-4 h-4 text-red-500" /> Scoring Penalty Triggers
+      </h3>
+      <p class="text-xs text-text-secondary">
+        To prevent clickbait loops, our crawler automatically flags and penalizes listings that match the following traits:
+      </p>
+      <ul class="space-y-2 text-xs text-text-secondary font-mono">
+        <li class="flex items-start gap-2">
+          <span class="text-red-500">•</span>
+          <span><strong>Bloat Penalty</strong>: Playlist exceeds 150 lectures without clear modular stages.</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-red-500">•</span>
+          <span><strong>Stale Penalty</strong>: Last update was over 3 years ago on rapidly shifting tech stacks.</span>
+        </li>
+        <li class="flex items-start gap-2">
+          <span class="text-red-500">•</span>
+          <span><strong>Redundancy Penalty</strong>: Over 10% duplicate lecture videos detected in the playlist index.</span>
+        </li>
+      </ul>
+    </section>
+  </div>
+</Layout>

@@ -1,0 +1,133 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Target, Heart, Shield, Award, Users, ChevronRight, HelpCircle } from '@lucide/astro';
+
+const breadcrumbs = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://youtubeplaylistfinder.com/" },
+    { "@type": "ListItem", "position": 2, "name": "About Us", "item": "https://youtubeplaylistfinder.com/about" }
+  ]
+};
+---
+
+<Layout 
+  title="About Us | youtubeplaylistfinder"
+  description="Discover the mission, methodology, and values backing the youtubeplaylistfinder curation scoring engine."
+  canonical="https://youtubeplaylistfinder.com/about"
+  schema={breadcrumbs}
+>
+  <div class="space-y-16">
+    <!-- Header -->
+    <section class="border-b border-white/5 pb-6">
+      <span class="text-[10px] font-mono uppercase tracking-wider text-text-muted">Who We Are</span>
+      <h1 class="text-3xl font-bold tracking-tight text-white mt-1">Our Mission & Purpose</h1>
+      <p class="text-xs text-text-secondary mt-1">Democratizing self-guided education by organizing the world's largest video study database.</p>
+    </section>
+
+    <!-- Mission grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center leading-relaxed text-left">
+      <div class="space-y-4">
+        <h2 class="text-xl font-bold text-white flex items-center gap-2">
+          <Target class="w-5 h-5 text-accent" /> Why We Exist
+        </h2>
+        <p class="text-xs text-text-secondary">
+          YouTube hosts some of the finest teachers on earth, publishing completely free curricula. However, because YouTube is designed primarily for quick entertainment, finding sequential courses is nearly impossible. Learners get trapped in clickbait cycles and fragmented search loops.
+        </p>
+        <p class="text-xs text-text-secondary">
+          youtubeplaylistfinder exists to bridge this gap. We crawl thousands of playlists, evaluate their lesson structure, parse user reviews, and score them transparently. This enables students to skip the search fatigue and begin structured studying immediately.
+        </p>
+      </div>
+      <div class="glass-panel border border-white/5 rounded-3xl p-6 md:p-8 space-y-4">
+        <h3 class="text-sm font-mono uppercase tracking-wider text-white">Our Core Commitments</h3>
+        <ul class="space-y-3 text-xs text-text-secondary">
+          <li class="flex gap-2">
+            <Heart class="w-4 h-4 text-accent shrink-0 mt-0.5" />
+            <span><strong>100% Free Access</strong>: No paywalls, session caps, or credit cards required.</span>
+          </li>
+          <li class="flex gap-2">
+            <Shield class="w-4 h-4 text-accent shrink-0 mt-0.5" />
+            <span><strong>Transparent Scoring</strong>: Clear, auditable metrics for every ranked playlist.</span>
+          </li>
+          <li class="flex gap-2">
+            <Users class="w-4 h-4 text-accent shrink-0 mt-0.5" />
+            <span><strong>Student Centric</strong>: Distraction-free Study Mode built directly for learners.</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Ranking Methodology -->
+    <section class="space-y-6">
+      <div class="text-center max-w-xl mx-auto">
+        <h2 class="text-xl font-bold text-white flex items-center justify-center gap-2">
+          <Award class="w-5 h-5 text-accent" /> Our Curation Scoring Methodology
+        </h2>
+        <p class="text-xs text-text-secondary mt-2">We analyze five distinct trust metrics to grade and score playlists out of 100.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {[
+          { title: 'User Reviews', val: '35%', desc: 'Analyzing review feedback, explanation clarity, and audio quality.' },
+          { title: 'Completion Rate', val: '25%', desc: 'Evaluating what percentage of students finish the video list.' },
+          { title: 'Structure Value', val: '20%', desc: 'Penalizing duplicate videos and disorganized lesson paths.' },
+          { title: 'Recent Activity', val: '10%', desc: 'Checking when the creator last updated the video sequence.' },
+          { title: 'Creator Trust', val: '10%', desc: 'Measuring channel subscriber scale and verified authority.' }
+        ].map(m => (
+          <div class="glass-panel rounded-2xl p-5 border border-white/5 space-y-2 text-left">
+            <span class="text-[10px] font-mono text-zinc-500 uppercase">{m.title}</span>
+            <div class="text-2xl font-extrabold font-mono text-white mt-1">{m.val}</div>
+            <p class="text-[10px] text-text-secondary leading-relaxed pt-1">{m.desc}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- Team section -->
+    <section class="space-y-6 border-t border-white/5 pt-12">
+      <h2 class="text-xl font-bold text-white text-center">Meet the Developers</h2>
+      <p class="text-xs text-text-secondary text-center max-w-md mx-auto">A global collective of self-taught developers, educators, and curriculum engineers dedicated to open education resources.</p>
+      
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto">
+        {[
+          { name: 'Diana Acharya', role: 'Founder & Software Architect' },
+          { name: 'Marcus K.', role: 'AI Curriculum Specialist' },
+          { name: 'Sarah L.', role: 'Lead Frontend Engineer' }
+        ].map(m => (
+          <div class="glass-panel rounded-2xl p-6 border border-white/5 text-center space-y-1">
+            <div class="w-12 h-12 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center text-white text-base font-bold mx-auto mb-3">
+              {m.name.charAt(0)}
+            </div>
+            <h4 class="text-xs font-bold text-white">{m.name}</h4>
+            <span class="text-[9px] font-mono text-text-muted uppercase tracking-wider block">{m.role}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="max-w-3xl mx-auto space-y-4 border-t border-white/5 pt-12">
+      <h3 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+        <HelpCircle class="w-4 h-4 text-accent" /> About Us FAQ
+      </h3>
+      
+      <details class="group border border-white/5 bg-zinc-950/40 rounded-xl p-4 cursor-pointer [&_summary::-webkit-details-marker]:hidden">
+        <summary class="flex justify-between items-center text-xs font-semibold text-white font-mono select-none">
+          <span>Are you affiliated with YouTube or Google?</span>
+          <ChevronRight class="w-4 h-4 text-text-muted group-hover:text-white transition-transform group-open:rotate-90" />
+        </summary>
+        <p class="text-xs text-text-secondary leading-relaxed mt-3 border-t border-white/5 pt-3">
+          No, youtubeplaylistfinder.com is an independent aggregator. We are not officially affiliated with, authorized, or endorsed by Google or YouTube.
+        </p>
+      </details>
+    </section>
+
+    <!-- CTA -->
+    <section class="text-center pt-8">
+      <a href="/search" class="px-6 py-3 rounded-2xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold hover:scale-98 transition-transform inline-block">
+        Start Searching Playlists →
+      </a>
+    </section>
+  </div>
+</Layout>

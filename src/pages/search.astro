@@ -1,0 +1,226 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { searchPlaylists } from '../lib/api';
+import { Search as SearchIcon, SlidersHorizontal, ArrowRight, Cpu, GraduationCap, ChevronDown } from '@lucide/astro';
+
+const url = new URL(Astro.request.url);
+const query = url.searchParams.get('q') || '';
+const difficulty = url.searchParams.get('difficulty') || '';
+const duration = url.searchParams.get('duration') || '';
+const sort = url.searchParams.get('sort') || 'best';
+
+// Run search on server
+const playlists = query 
+  ? await searchPlaylists(query, { difficulty, duration }, sort)
+  : [];
+
+// Breadcrumbs
+const breadcrumbs = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://youtubeplaylistfinder.com/" },
+    { "@type": "ListItem", "position": 2, "name": "Search", "item": "https://youtubeplaylistfinder.com/search" }
+  ]
+};
+
+const getDifficultyBadge = (diff: string) => {
+  if (diff === 'Beginner') return 'border-emerald-500/20 text-emerald-400 bg-emerald-950/10';
+  if (diff === 'Intermediate') return 'border-yellow-500/20 text-yellow-400 bg-yellow-950/10';
+  return 'border-red-500/20 text-red-400 bg-red-950/10';
+};
+---
+
+<Layout 
+  title={query ? `${query} YouTube Playlists - Search Results | youtubeplaylistfinder` : "Search Scored YouTube Playlists | youtubeplaylistfinder"}
+  description="Search and discover the best educational and study YouTube playlists. Mathematically scored by structure, authority, reviews, and duration metrics."
+  canonical="https://youtubeplaylistfinder.com/search"
+  robots={query ? "noindex, follow" : "index, follow"}
+  schema={breadcrumbs}
+>
+  <div class="space-y-8">
+    <section class="border-b border-white/5 pb-6">
+      <span class="text-[10px] font-mono uppercase tracking-wider text-text-muted font-semibold">Search Portal</span>
+      <h1 class="text-3xl font-bold tracking-tight text-white mt-1">Playlist Search Explorer</h1>
+      <p class="text-xs text-text-secondary mt-1">Verify Quality Scores and syllabi outlines for any online study playlist topic.</p>
+    </section>
+
+    <!-- Search Form -->
+    <div class="w-full max-w-2xl relative z-20">
+      <form method="GET" action="/search" class="relative">
+        <SearchIcon class="w-5 h-5 text-text-muted absolute left-4 top-1/2 -translate-y-1/2" />
+        <input 
+          type="text" 
+          name="q"
+          value={query}
+          required
+          placeholder="Enter a study subject (e.g. Docker, Python, Machine Learning, यूपीएससी)..." 
+          class="w-full pl-12 pr-6 py-3.5 rounded-2xl bg-zinc-950 border border-white/10 text-sm text-white placeholder-text-muted focus:outline-none focus:border-accent transition-colors shadow-inner"
+        />
+        {difficulty && <input type="hidden" name="difficulty" value={difficulty} />}
+        {duration && <input type="hidden" name="duration" value={duration} />}
+        {sort && <input type="hidden" name="sort" value={sort} />}
+      </form>
+    </div>
+
+    <!-- Results layout -->
+    <div class="flex flex-col lg:flex-row gap-8 mt-8">
+      <!-- Filter Sidebar -->
+      <aside class="w-full lg:w-64 shrink-0 space-y-6">
+        <div class="flex items-center justify-between border-b border-white/5 pb-3">
+          <h3 class="text-sm font-bold text-white flex items-center gap-1.5 font-mono uppercase tracking-wider text-xs">
+            <SlidersHorizontal class="w-4 h-4 text-accent" /> Filters
+          </h3>
+          <a href="/search" class="text-[10px] text-text-muted hover:text-white font-mono">Reset All</a>
+        </div>
+
+        <form method="GET" action="/search" class="space-y-6" id="filter-form">
+          <input type="hidden" name="q" value={query} />
+          
+          <!-- Difficulty filter -->
+          <div class="space-y-2">
+            <label class="text-[10px] uppercase font-mono tracking-wider text-text-muted block">Difficulty</label>
+            <div class="space-y-1.5 text-xs text-text-secondary">
+              {['Beginner', 'Intermediate', 'Advanced'].map(lvl => (
+                <label class="flex items-center gap-2 hover:text-white cursor-pointer select-none">
+                  <input 
+                    type="radio" 
+                    name="difficulty" 
+                    value={lvl}
+                    checked={difficulty === lvl}
+                    class="rounded-full border-white/10 bg-zinc-900 text-accent focus:ring-accent"
+                    onchange="this.form.submit()"
+                  />
+                  <span>{lvl}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <!-- Duration filter -->
+          <div class="space-y-2">
+            <label class="text-[10px] uppercase font-mono tracking-wider text-text-muted block">Duration</label>
+            <div class="space-y-1.5 text-xs text-text-secondary">
+              <label class="flex items-center gap-2 hover:text-white cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="duration" 
+                  value="short" 
+                  checked={duration === 'short'}
+                  class="rounded-full border-white/10 bg-zinc-900 text-accent focus:ring-accent"
+                  onchange="this.form.submit()"
+                />
+                <span>Short course (&lt;40h)</span>
+              </label>
+              <label class="flex items-center gap-2 hover:text-white cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="duration" 
+                  value="medium" 
+                  checked={duration === 'medium'}
+                  class="rounded-full border-white/10 bg-zinc-900 text-accent focus:ring-accent"
+                  onchange="this.form.submit()"
+                />
+                <span>Mid course (40-65h)</span>
+              </label>
+              <label class="flex items-center gap-2 hover:text-white cursor-pointer">
+                <input 
+                  type="radio" 
+                  name="duration" 
+                  value="long" 
+                  checked={duration === 'long'}
+                  class="rounded-full border-white/10 bg-zinc-900 text-accent focus:ring-accent"
+                  onchange="this.form.submit()"
+                />
+                <span>Comprehensive (&gt;65h)</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Sort filter -->
+          <div class="space-y-2 pt-2 border-t border-white/5">
+            <label for="sort-select" class="text-[10px] uppercase font-mono tracking-wider text-text-muted block">Sort by</label>
+            <select 
+              id="sort-select"
+              name="sort" 
+              class="w-full bg-zinc-900 border border-white/10 text-xs text-white rounded-xl py-2.5 px-3 focus:outline-none focus:border-accent"
+              onchange="this.form.submit()"
+            >
+              <option value="best" checked={sort === 'best'}>Best Score</option>
+              <option value="fastest" checked={sort === 'fastest'}>Fastest (Shortest)</option>
+              <option value="complete" checked={sort === 'complete'}>Most Complete</option>
+            </select>
+          </div>
+        </form>
+      </aside>
+
+      <!-- Listings Grid -->
+      <main class="flex-1 space-y-6">
+        <div class="flex items-center justify-between text-xs text-text-muted font-mono border-b border-white/5 pb-3">
+          <span>{query ? `Found ${playlists.length} results` : 'Enter a query to start search'}</span>
+          <span>Ranked by quality</span>
+        </div>
+
+        {query && playlists.length === 0 && (
+          <div class="py-20 text-center border border-dashed border-white/5 rounded-2xl">
+            <h4 class="text-sm font-semibold text-white">No playlists found for "{query}"</h4>
+            <p class="text-xs text-text-muted max-w-sm mt-1 mx-auto">We couldn't locate scored guides. Go to homepage to request dynamic scraper triggers.</p>
+          </div>
+        )}
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          {playlists.map(playlist => (
+            <div class="group glass-panel rounded-2xl overflow-hidden glass-panel-hover flex flex-col justify-between h-full relative">
+              <div class="relative w-full aspect-video overflow-hidden border-b border-white/5 bg-zinc-950">
+                <img src={playlist.thumbnail} alt={playlist.title} class="w-full h-full object-cover opacity-75 group-hover:scale-105 group-hover:opacity-90 transition-all duration-300" />
+                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+                
+                <div class="absolute bottom-3 left-3 flex items-center gap-2 z-10">
+                  <span class="px-2.5 py-0.5 rounded-full bg-black/75 border border-white/5 text-[10px] font-mono text-white flex items-center gap-1">
+                    {playlist.videoCount} videos
+                  </span>
+                  <span class="px-2.5 py-0.5 rounded-full bg-black/75 border border-white/5 text-[10px] font-mono text-white flex items-center gap-1">
+                    {playlist.durationHours} hours
+                  </span>
+                </div>
+              </div>
+
+              <div class="p-6 flex-1 flex flex-col justify-between">
+                <div>
+                  <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500">{playlist.channel}</span>
+                  <h3 class="text-base font-bold tracking-tight text-white line-clamp-2 mt-1 leading-snug group-hover:text-accent transition-colors">
+                    <a href={`/playlist/${playlist.slug}`}>{playlist.title}</a>
+                  </h3>
+                  <p class="text-xs text-zinc-400 line-clamp-2 leading-relaxed mt-2 mb-4">{playlist.description}</p>
+                </div>
+
+                <div class="border-t border-white/5 pt-4 flex items-center justify-between">
+                  <!-- Score Indicator -->
+                  <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full border border-accent/20 bg-accent/5 flex items-center justify-center font-mono font-bold text-xs text-white">
+                      {playlist.score}
+                    </div>
+                    <div class="flex flex-col">
+                      <span class="text-[8px] uppercase tracking-wider text-accent font-semibold font-mono">Score</span>
+                      <span class="text-[10px] text-zinc-500 leading-none">Quality</span>
+                    </div>
+                  </div>
+
+                  <span class={`text-[9px] uppercase px-2 py-0.5 rounded border ${getDifficultyBadge(playlist.difficulty)}`}>
+                    {playlist.difficulty}
+                  </span>
+                </div>
+              </div>
+
+              <div class="px-6 pb-6 pt-2 flex gap-3">
+                <a href={`/playlist/${playlist.slug}`} class="flex-1 py-2 px-4 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-lg text-center">
+                  Start Learning
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </main>
+    </div>
+  </div>
+</Layout>

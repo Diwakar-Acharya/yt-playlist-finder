@@ -1,0 +1,80 @@
+---
+import { CheckCircle2, AlertTriangle, HelpCircle } from '@lucide/astro';
+
+interface Props {
+  topics: string[];
+  missingTopics: string[];
+}
+
+const { topics, missingTopics } = Astro.props;
+
+const totalTopics = topics.length + missingTopics.length;
+const coveragePercentage = totalTopics > 0 ? Math.round((topics.length / totalTopics) * 100) : 0;
+---
+
+<div class="glass-panel rounded-2xl p-6 md:p-8">
+  <div class="flex items-center justify-between border-b border-white/5 pb-4 mb-6">
+    <div>
+      <h3 class="text-sm font-mono uppercase tracking-wider text-white">Syllabus Coverage</h3>
+      <p class="text-xs text-text-muted mt-0.5">Topic completeness analysis computed by ranking engine.</p>
+    </div>
+    
+    <div class="text-right">
+      <span class="text-2xl font-bold font-mono text-white">{coveragePercentage}%</span>
+      <span class="text-[10px] font-mono text-text-muted block">Coverage</span>
+    </div>
+  </div>
+
+  <!-- Progress Bar -->
+  <div class="w-full h-2 bg-zinc-900 border border-white/5 rounded-full overflow-hidden mb-8 shadow-inner">
+    <div 
+      class="h-full bg-gradient-to-r from-accent to-indigo-500 rounded-full transition-all duration-1000 ease-out shadow-[0_0_12px_rgba(109,94,247,0.5)]" 
+      style={`width: ${coveragePercentage}%`}
+    ></div>
+  </div>
+
+  <!-- Syllabus Grid Layout -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <!-- Covered Topics -->
+    <div class="space-y-3">
+      <h4 class="text-xs font-mono uppercase tracking-wider text-accent flex items-center gap-1.5 font-bold">
+        <CheckCircle2 class="w-3.5 h-3.5" /> Covered Syllabus ({topics.length})
+      </h4>
+      
+      <ul class="space-y-2 max-h-[300px] overflow-y-auto pr-2 no-scrollbar">
+        {topics.map(t => (
+          <li class="flex items-start gap-3 p-2.5 rounded-xl border border-white/5 bg-zinc-950/40 text-xs text-zinc-300">
+            <span class="w-1.5 h-1.5 rounded-full bg-accent mt-1.5 shadow-[0_0_5px_#6d5ef7]"></span>
+            <span>{t}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+
+    <!-- Missing Topics -->
+    <div class="space-y-3">
+      <h4 class="text-xs font-mono uppercase tracking-wider text-rose-400 flex items-center gap-1.5 font-bold">
+        <AlertTriangle class="w-3.5 h-3.5" /> Auto-Detected Gaps ({missingTopics.length})
+      </h4>
+      
+      {missingTopics.length > 0 ? (
+        <ul class="space-y-2">
+          {missingTopics.map(t => (
+            <li class="flex items-start gap-3 p-2.5 rounded-xl border border-rose-500/10 bg-rose-950/5 text-xs text-zinc-300">
+              <span class="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shadow-[0_0_5px_rgba(239,68,68,0.5)]"></span>
+              <div class="flex flex-col gap-0.5">
+                <span class="font-medium text-white">{t}</span>
+                <span class="text-[10px] text-rose-400">Not covered in this playlist. Seek supplementary guides.</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div class="h-32 flex flex-col items-center justify-center border border-dashed border-white/5 rounded-xl text-center text-text-muted">
+          <CheckCircle2 class="w-6 h-6 text-emerald-500 mb-2" />
+          <span class="text-xs">No coverage gaps detected!</span>
+        </div>
+      )}
+    </div>
+  </div>
+</div>

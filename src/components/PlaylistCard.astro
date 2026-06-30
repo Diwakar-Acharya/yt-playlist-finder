@@ -1,0 +1,155 @@
+---
+import type { Playlist } from '../lib/db';
+import ScoreIndicator from './ScoreIndicator.astro';
+import { Play, Bookmark, Clock, BookOpen, Star, ExternalLink } from '@lucide/astro';
+
+interface Props {
+  playlist: Playlist;
+}
+
+const { playlist } = Astro.props;
+---
+
+<div 
+  class="group glass-panel rounded-2xl overflow-hidden glass-panel-hover flex flex-col justify-between h-full relative"
+  data-slug={playlist.slug}
+>
+  <!-- Card Header Image/Thumbnail -->
+  <div class="relative w-full aspect-video overflow-hidden border-b border-white/5 bg-zinc-950">
+    <img 
+      src={playlist.thumbnail} 
+      alt={playlist.title} 
+      loading="lazy"
+      class="w-full h-full object-cover opacity-75 group-hover:scale-105 group-hover:opacity-90 transition-all duration-300"
+    />
+    <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+    
+    <!-- Save Playlist Button -->
+    <button 
+      class="bookmark-btn absolute top-3 right-3 p-2 rounded-full bg-black/60 border border-white/5 text-text-secondary hover:text-white hover:bg-black/90 hover:scale-110 active:scale-95 transition-all z-20 cursor-pointer"
+      aria-label="Save Playlist"
+      data-playlist-slug={playlist.slug}
+    >
+      <Bookmark class="w-4 h-4 bookmark-icon fill-transparent" />
+    </button>
+    
+    <!-- Video Count / Hours Badge -->
+    <div class="absolute bottom-3 left-3 flex items-center gap-2 z-10">
+      <span class="px-2.5 py-0.5 rounded-full bg-black/75 border border-white/5 text-[10px] font-mono text-white flex items-center gap-1">
+        <BookOpen class="w-3 h-3 text-accent" /> {playlist.videoCount} videos
+      </span>
+      <span class="px-2.5 py-0.5 rounded-full bg-black/75 border border-white/5 text-[10px] font-mono text-white flex items-center gap-1">
+        <Clock class="w-3 h-3 text-accent" /> {playlist.durationHours} hours
+      </span>
+    </div>
+  </div>
+
+  <!-- Card Body -->
+  <div class="p-6 flex-1 flex flex-col justify-between">
+    <div>
+      <div class="flex items-start justify-between gap-4 mb-2">
+        <div class="flex flex-col">
+          <span class="text-[10px] font-mono uppercase tracking-wider text-text-muted">
+            {playlist.channel}
+          </span>
+          <h3 class="text-base font-bold tracking-tight text-white line-clamp-2 mt-1 leading-snug group-hover:text-accent transition-colors">
+            {playlist.title}
+          </h3>
+        </div>
+      </div>
+      
+      <p class="text-xs text-text-secondary line-clamp-2 leading-relaxed mb-4">
+        {playlist.description}
+      </p>
+    </div>
+
+    <!-- Metrics Row -->
+    <div class="border-t border-white/5 pt-4 flex items-center justify-between">
+      <!-- Quality Score -->
+      <ScoreIndicator score={playlist.score} size="sm" />
+      
+      <!-- Stars & Level -->
+      <div class="flex flex-col items-end gap-1 font-mono">
+        <span class={`text-[9px] uppercase px-2 py-0.5 rounded border ${
+          playlist.difficulty === 'Beginner' ? 'border-emerald-500/20 text-emerald-400 bg-emerald-950/10' :
+          playlist.difficulty === 'Intermediate' ? 'border-yellow-500/20 text-yellow-400 bg-yellow-950/10' :
+          'border-red-500/20 text-red-400 bg-red-950/10'
+        }`}>
+          {playlist.difficulty}
+        </span>
+        <div class="flex items-center gap-1 text-[10px] text-zinc-300">
+          <Star class="w-3 h-3 fill-yellow-500 text-yellow-500" />
+          <span>{playlist.communityRating}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action CTA Footer -->
+  <div class="px-6 pb-6 pt-2 flex gap-3">
+    <a 
+      href={`/playlist/${playlist.slug}`} 
+      class="flex-1 py-2 px-4 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold flex items-center justify-center gap-1.5 shadow-lg active:scale-[0.98] transition-all"
+    >
+      <Play class="w-3.5 h-3.5 fill-black" /> View Breakdown
+    </a>
+  </div>
+</div>
+
+<script>
+  // Dynamic client-side logic to handle Bookmarks
+  document.addEventListener('DOMContentLoaded', () => {
+    const bookmarkButtons = document.querySelectorAll('.bookmark-btn');
+    
+    // Get currently saved playlists
+    const getSavedPlaylists = (): string[] => {
+      try {
+        return JSON.parse(localStorage.getItem('savedPlaylists') || '[]');
+      } catch {
+        return [];
+      }
+    };
+    
+    const saved = getSavedPlaylists();
+    
+    bookmarkButtons.forEach(btn => {
+      const slug = btn.getAttribute('data-playlist-slug');
+      if (!slug) return;
+      
+      const icon = btn.querySelector('.bookmark-icon');
+      
+      // Initial State
+      if (saved.includes(slug)) {
+        icon?.classList.add('fill-accent', 'text-accent');
+        icon?.classList.remove('fill-transparent', 'text-text-secondary');
+      }
+      
+      // Toggle onClick
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        let currentSaved = getSavedPlaylists();
+        if (currentSaved.includes(slug)) {
+          // Remove
+          currentSaved = currentSaved.filter(s => s !== slug);
+          icon?.classList.remove('fill-accent', 'text-accent');
+          icon?.classList.add('fill-transparent', 'text-text-secondary');
+        } else {
+          // Add
+          currentSaved.push(slug);
+          icon?.classList.add('fill-accent', 'text-accent');
+          icon?.classList.remove('fill-transparent', 'text-text-secondary');
+          
+          // Trigger slight confetti/scale effect
+          btn.classList.add('scale-125');
+          setTimeout(() => btn.classList.remove('scale-125'), 150);
+        }
+        localStorage.setItem('savedPlaylists', JSON.stringify(currentSaved));
+        
+        // Dispatch custom event to notify other components (e.g. Dashboard)
+        window.dispatchEvent(new CustomEvent('savedPlaylistsUpdated'));
+      });
+    });
+  });
+</script>

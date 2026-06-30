@@ -1,0 +1,20 @@
+---
+import Layout from '../layouts/Layout.astro';
+import CompareTool from '../components/CompareTool.astro';
+---
+
+<Layout 
+  title="AI Playlist Compare Tool | EasyTubeList"
+  description="Compare two YouTube playlists side-by-side on duration, difficulty, syllabus coverage, reviews, and algorithm scores."
+>
+  <div class="space-y-8">
+    <section class="border-b border-white/5 pb-6">
+      <span class="text-[10px] font-mono uppercase tracking-wider text-text-muted">Analytics Studio</span>
+      <h1 class="text-3xl font-bold tracking-tight text-white mt-1">Playlist Comparison</h1>
+      <p class="text-xs text-text-secondary mt-1">Overlay two curricula side-by-side to detect overlap, gaps, and depth of topics.</p>
+    </section>
+
+    <!-- Compare Tool Wrapper -->
+    <CompareTool />
+  </div>
+</Layout>

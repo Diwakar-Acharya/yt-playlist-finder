@@ -1,0 +1,49 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { ShieldAlert, ArrowLeft } from '@lucide/astro';
+
+const breadcrumbs = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://youtubeplaylistfinder.com/" },
+    { "@type": "ListItem", "position": 2, "name": "500 Error", "item": "https://youtubeplaylistfinder.com/500" }
+  ]
+};
+---
+
+<Layout 
+  title="500 - Server Error | youtubeplaylistfinder"
+  description="Internal server error. Our system is working to resolve the issue. Please return to the homepage."
+  canonical="https://youtubeplaylistfinder.com/500"
+  robots="noindex, nofollow"
+  schema={breadcrumbs}
+>
+  <div class="min-h-[60vh] flex flex-col items-center justify-center text-center px-4 relative overflow-hidden">
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div class="w-[400px] h-[400px] rounded-full bg-red-500/5 blur-[100px] -translate-y-12"></div>
+    </div>
+
+    <div class="relative z-10 space-y-6 max-w-md">
+      <!-- Icon Indicator -->
+      <div class="w-16 h-16 rounded-2xl bg-zinc-950 border border-red-500/10 flex items-center justify-center text-red-500 mx-auto shadow-inner">
+        <ShieldAlert class="w-8 h-8 text-red-500 animate-pulse" />
+      </div>
+
+      <div class="space-y-2">
+        <span class="text-[10px] font-mono uppercase tracking-wider text-red-500 font-bold">Error 500</span>
+        <h1 class="text-3xl font-extrabold tracking-tight text-white">Internal Server Error</h1>
+        <p class="text-xs text-text-secondary leading-relaxed">
+          Something went wrong on our end. The server encountered an unexpected condition that prevented it from fulfilling the request.
+        </p>
+      </div>
+
+      <!-- CTA buttons -->
+      <div class="flex items-center justify-center gap-4 pt-4">
+        <a href="/" class="px-5 py-2.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold hover:scale-98 transition-transform inline-flex items-center gap-1.5 shadow-lg">
+          <ArrowLeft class="w-3.5 h-3.5" /> Return Home
+        </a>
+      </div>
+    </div>
+  </div>
+</Layout>

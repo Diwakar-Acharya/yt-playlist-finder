@@ -1,0 +1,274 @@
+---
+import { PLAYLISTS } from '../lib/db';
+import { GitCompare, Plus, Check, ArrowLeftRight, CheckCircle, HelpCircle } from '@lucide/astro';
+---
+
+<div class="w-full glass-panel rounded-2xl p-6 md:p-8" id="compare-tool-root">
+  <div class="flex flex-col md:flex-row items-center justify-between gap-6 border-b border-white/5 pb-6 mb-8">
+    <div>
+      <h3 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+        <GitCompare class="w-5 h-5 text-accent" /> AI Compare Engine
+      </h3>
+      <p class="text-xs text-text-secondary mt-1">Compare syllabus coverage, student reviews, and freshness side-by-side.</p>
+    </div>
+    
+    <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+      <!-- Playlist selector A -->
+      <select 
+        id="compare-select-a" 
+        class="bg-zinc-900 border border-white/10 text-xs text-white rounded-xl py-2.5 px-4 focus:outline-none focus:border-accent w-full sm:w-64"
+      >
+        <option value="" disabled selected>Select Playlist A...</option>
+      </select>
+      
+      <!-- Swap icon -->
+      <div class="hidden sm:flex items-center text-text-muted">
+        <ArrowLeftRight class="w-4 h-4" />
+      </div>
+
+      <!-- Playlist selector B -->
+      <select 
+        id="compare-select-b" 
+        class="bg-zinc-900 border border-white/10 text-xs text-white rounded-xl py-2.5 px-4 focus:outline-none focus:border-accent w-full sm:w-64"
+      >
+        <option value="" disabled selected>Select Playlist B...</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div id="compare-empty-state" class="flex flex-col items-center justify-center py-16 text-center">
+    <div class="w-16 h-16 rounded-full bg-zinc-950/60 border border-white/5 flex items-center justify-center text-text-muted mb-4 shadow-inner">
+      <GitCompare class="w-8 h-8" />
+    </div>
+    <h4 class="text-sm font-semibold text-white">Compare Playlists Side-by-Side</h4>
+    <p class="text-xs text-text-muted max-w-sm mt-1">Select any two playlists from the dropdown selectors at the top to compute comparative coverage analytics.</p>
+  </div>
+
+  <!-- Comparative Results -->
+  <div id="compare-results" class="hidden grid-cols-1 md:grid-cols-2 gap-8 relative">
+    
+    <!-- Vertical Divider line for desktops -->
+    <div class="hidden md:block absolute left-1/2 top-0 bottom-0 w-[1px] bg-white/5 -translate-x-1/2"></div>
+    
+    <!-- Column A -->
+    <div class="space-y-6" id="compare-col-a">
+      <!-- Dynamic contents inserted via script -->
+    </div>
+
+    <!-- Column B -->
+    <div class="space-y-6" id="compare-col-b">
+      <!-- Dynamic contents inserted via script -->
+    </div>
+  </div>
+</div>
+
+<script is:inline define:vars={{ PLAYLISTS }}>
+  // Interactive client-side comparison calculator
+  document.addEventListener('DOMContentLoaded', () => {
+    const selectA = document.getElementById('compare-select-a');
+    const selectB = document.getElementById('compare-select-b');
+    const emptyState = document.getElementById('compare-empty-state');
+    const results = document.getElementById('compare-results');
+    const colA = document.getElementById('compare-col-a');
+    const colB = document.getElementById('compare-col-b');
+
+    // Retrieve visited list or presets fallback
+    let itemsList = [];
+    try {
+      itemsList = JSON.parse(localStorage.getItem('recentlyVisited') || '[]');
+    } catch {
+      itemsList = [];
+    }
+
+    if (itemsList.length === 0) {
+      itemsList = PLAYLISTS;
+    }
+
+    // Populate drop options dynamically
+    function populateDropdowns() {
+      if (!selectA || !selectB) return;
+      const placeholderA = selectA.options[0];
+      const placeholderB = selectB.options[0];
+
+      selectA.innerHTML = '';
+      selectB.innerHTML = '';
+
+      selectA.appendChild(placeholderA);
+      selectB.appendChild(placeholderB);
+
+      itemsList.forEach(item => {
+        const optA = document.createElement('option');
+        const optB = document.createElement('option');
+        optA.value = item.slug;
+        optA.textContent = `${item.title} (${item.channel})`;
+        optB.value = item.slug;
+        optB.textContent = `${item.title} (${item.channel})`;
+        selectA.appendChild(optA);
+        selectB.appendChild(optB);
+      });
+    }
+
+    populateDropdowns();
+
+    // Get preset values from URL if they exist
+    const urlParams = new URLSearchParams(window.location.search);
+    const presetA = urlParams.get('a');
+    const presetB = urlParams.get('b');
+
+    if (presetA && selectA) selectA.value = presetA;
+    if (presetB && selectB) selectB.value = presetB;
+
+    function renderColumn(playlist, otherPlaylist) {
+      const getScoreBadgeClass = (score) => {
+        if (score >= 95) return 'text-accent border-accent/20 bg-accent/5';
+        if (score >= 90) return 'text-indigo-400 border-indigo-500/20 bg-indigo-950/10';
+        return 'text-emerald-400 border-emerald-500/20 bg-emerald-950/10';
+      };
+
+      // Find shared and unique topics
+      const sharedTopics = playlist.topics.filter(t => otherPlaylist?.topics.some(ot => ot.toLowerCase() === t.toLowerCase()) || false);
+      const uniqueTopics = playlist.topics.filter(t => !otherPlaylist?.topics.some(ot => ot.toLowerCase() === t.toLowerCase()) || false);
+
+      return `
+        <div class="flex flex-col gap-4">
+          <!-- Playlist Header -->
+          <div class="flex gap-4">
+            <img src="${playlist.thumbnail}" alt="${playlist.title}" class="w-24 aspect-video object-cover rounded-lg border border-white/5 bg-zinc-950" />
+            <div class="flex flex-col justify-between py-1">
+              <div>
+                <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500">${playlist.channel}</span>
+                <h4 class="text-sm font-bold tracking-tight text-white line-clamp-1 mt-0.5">${playlist.title}</h4>
+              </div>
+              <a href="/playlist/${playlist.slug}" class="text-xs text-accent hover:underline flex items-center gap-1">
+                View detail page →
+              </a>
+            </div>
+          </div>
+
+          <!-- Score Card -->
+          <div class="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-zinc-950/40">
+            <div>
+              <span class="text-[10px] font-mono text-zinc-500 block uppercase">Weighted Score</span>
+              <span class="text-2xl font-bold tracking-tight text-white font-mono">${playlist.score}<span class="text-xs text-zinc-500 font-normal">/100</span></span>
+            </div>
+            <span class="text-[10px] font-mono border px-2.5 py-0.5 rounded-full ${getScoreBadgeClass(playlist.score)}">
+              ${playlist.score >= 95 ? 'Elite Tier' : playlist.score >= 90 ? 'Top Tier' : 'Highly Rated'}
+            </span>
+          </div>
+
+          <!-- Metadata List -->
+          <div class="grid grid-cols-2 gap-4 text-xs font-mono border-t border-b border-white/5 py-4">
+            <div>
+              <span class="text-zinc-500 block">Total Duration</span>
+              <span class="text-white font-semibold">${playlist.durationHours} Hours</span>
+            </div>
+            <div>
+              <span class="text-zinc-500 block">Video Count</span>
+              <span class="text-white font-semibold">${playlist.videoCount} Videos</span>
+            </div>
+            <div>
+              <span class="text-zinc-500 block">Difficulty Level</span>
+              <span class="text-white font-semibold">${playlist.difficulty}</span>
+            </div>
+            <div>
+              <span class="text-zinc-500 block">Language</span>
+              <span class="text-white font-semibold">${playlist.language}</span>
+            </div>
+          </div>
+
+          <!-- Score Breakdown -->
+          <div>
+            <h5 class="text-xs font-mono uppercase tracking-wider text-white mb-3">Ranking Breakdowns</h5>
+            <div class="space-y-2 text-[11px] font-mono">
+              <div class="flex justify-between">
+                <span class="text-zinc-400">User Reviews (35%)</span>
+                <span class="text-white">${playlist.scoreBreakdown.userReviews}/100</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Completion Rate (25%)</span>
+                <span class="text-white">${playlist.scoreBreakdown.completionRate}/100</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Playlist Structure (20%)</span>
+                <span class="text-white">${playlist.scoreBreakdown.playlistStructure}/100</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Recent Activity (10%)</span>
+                <span class="text-white">${playlist.scoreBreakdown.recentActivity}/100</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-zinc-400">Creator Authority (10%)</span>
+                <span class="text-white">${playlist.scoreBreakdown.creatorAuthority}/100</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Topic Analysis -->
+          <div class="space-y-3">
+            <h5 class="text-xs font-mono uppercase tracking-wider text-white">Syllabus Analysis</h5>
+            
+            <div class="space-y-2">
+              <span class="text-[11px] font-mono text-zinc-400 block">Unique to this playlist (${uniqueTopics.length}):</span>
+              <div class="flex flex-wrap gap-1.5">
+                ${uniqueTopics.length > 0 ? uniqueTopics.map(t => `<span class="px-2 py-0.5 rounded bg-zinc-900 border border-white/5 text-[10px] text-zinc-300">${t}</span>`).join('') : '<span class="text-[10px] text-zinc-500 font-mono">None</span>'}
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <span class="text-[11px] font-mono text-zinc-400 block">Shared topics (${sharedTopics.length}):</span>
+              <div class="flex flex-wrap gap-1.5">
+                ${sharedTopics.length > 0 ? sharedTopics.map(t => `<span class="px-2 py-0.5 rounded bg-accent/5 border border-accent/10 text-[10px] text-accent/80">${t}</span>`).join('') : '<span class="text-[10px] text-zinc-500 font-mono">None</span>'}
+              </div>
+            </div>
+
+            <div class="space-y-2">
+              <span class="text-[11px] font-mono text-rose-400 block">Detected missing topics (${playlist.missingTopics.length}):</span>
+              <div class="flex flex-wrap gap-1.5">
+                ${playlist.missingTopics.map(t => `<span class="px-2 py-0.5 rounded bg-rose-950/10 border border-rose-500/20 text-[10px] text-rose-400">${t}</span>`).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function calculateComparison() {
+      const valA = selectA.value;
+      const valB = selectB.value;
+
+      if (!valA || !valB) {
+        emptyState.classList.remove('hidden');
+        results.classList.remove('grid');
+        results.classList.add('hidden');
+        return;
+      }
+
+      const playlistA = itemsList.find(p => p.slug === valA);
+      const playlistB = itemsList.find(p => p.slug === valB);
+
+      if (!playlistA || !playlistB) return;
+
+      emptyState.classList.add('hidden');
+      results.classList.remove('hidden');
+      results.classList.add('grid');
+
+      colA.innerHTML = renderColumn(playlistA, playlistB);
+      colB.innerHTML = renderColumn(playlistB, playlistA);
+      
+      // Update browser URL query params without reloading
+      const url = new URL(window.location.href);
+      url.searchParams.set('a', valA);
+      url.searchParams.set('b', valB);
+      window.history.replaceState({}, '', url.toString());
+    }
+
+    selectA.addEventListener('change', calculateComparison);
+    selectB.addEventListener('change', calculateComparison);
+
+    // Initial load check
+    if (selectA.value && selectB.value) {
+      calculateComparison();
+    }
+  });
+</script>

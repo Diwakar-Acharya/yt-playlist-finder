@@ -1,0 +1,97 @@
+---
+import { Search, Flame, Code2, Layers, BookOpen, GitCompare } from '@lucide/astro';
+---
+
+<footer class="w-full bg-black border-t border-white/5 py-16 px-6 md:px-12 mt-20 relative">
+  <div class="absolute inset-0 bg-gradient-to-t from-zinc-950/20 to-transparent pointer-events-none"></div>
+  
+  <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-5 gap-12 relative z-10">
+    <!-- Brand / Column 1 -->
+    <div class="md:col-span-2 flex flex-col gap-4">
+      <a href="/" class="flex items-center gap-2">
+        <img src="/favicon.svg" alt="youtubeplaylistfinder logo" class="w-7 h-7" />
+        <span class="font-bold tracking-tight text-white">
+          youtubeplaylistfinder<span class="text-accent text-xs font-bold">.com</span>
+        </span>
+      </a>
+      <p class="text-xs text-text-secondary leading-relaxed max-w-sm">
+        Discover and search the best learning playlists on YouTube. Stop wasting time with disjointed tutorials. Search once, verify Quality Scores, and learn step-by-step.
+      </p>
+      
+      <!-- Newsletter Signup -->
+      <form class="mt-4 flex flex-col gap-2 max-w-sm" id="newsletter-form">
+        <label for="footer-email" class="text-[10px] uppercase font-mono tracking-wider text-text-muted">Stay updated with new learning tracks</label>
+        <div class="flex gap-2">
+          <input 
+            type="email" 
+            id="footer-email" 
+            placeholder="you@domain.com"
+            required
+            class="flex-1 px-3 py-1.5 rounded-xl border border-white/5 bg-zinc-900/60 text-xs text-white placeholder-text-muted focus:outline-none focus:border-accent transition-colors"
+          />
+          <button 
+            type="submit" 
+            class="px-4 py-1.5 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-medium hover:scale-95 transition-all cursor-pointer"
+          >
+            Subscribe
+          </button>
+        </div>
+        <span id="footer-success" class="text-[10px] text-emerald-500 hidden">Subscribed successfully!</span>
+      </form>
+    </div>
+
+    <!-- Product Links -->
+    <div class="flex flex-col gap-3">
+      <h4 class="text-[11px] font-mono uppercase tracking-wider text-white">Product</h4>
+      <a href="/search" class="text-xs text-text-secondary hover:text-white transition-colors">Search</a>
+      <a href="/roadmaps" class="text-xs text-text-secondary hover:text-white transition-colors">Topics</a>
+      <a href="/trending" class="text-xs text-text-secondary hover:text-white transition-colors">Trending</a>
+      <a href="/top-playlists" class="text-xs text-text-secondary hover:text-white transition-colors">Rankings</a>
+    </div>
+
+    <!-- Company Links -->
+    <div class="flex flex-col gap-3">
+      <h4 class="text-[11px] font-mono uppercase tracking-wider text-white">Company</h4>
+      <a href="/about" class="text-xs text-text-secondary hover:text-white transition-colors">About Us</a>
+      <a href="/contact" class="text-xs text-text-secondary hover:text-white transition-colors">Contact Us</a>
+      <a href="/privacy-policy" class="text-xs text-text-secondary hover:text-white transition-colors">Privacy Policy</a>
+      <a href="/terms-and-conditions" class="text-xs text-text-secondary hover:text-white transition-colors">Terms & Conditions</a>
+    </div>
+
+    <!-- Resources Links -->
+    <div class="flex flex-col gap-3">
+      <h4 class="text-[11px] font-mono uppercase tracking-wider text-white">Resources</h4>
+      <a href="/faq" class="text-xs text-text-secondary hover:text-white transition-colors">FAQ</a>
+      <a href="/how-it-works" class="text-xs text-text-secondary hover:text-white transition-colors">How It Works</a>
+      <a href="/categories" class="text-xs text-text-secondary hover:text-white transition-colors">Learning Categories</a>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto border-t border-white/5 mt-16 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 relative z-10 text-[11px] text-text-muted font-mono">
+    <div>
+      © {new Date().getFullYear()} youtubeplaylistfinder. Not affiliated with Google or YouTube.
+    </div>
+    <div class="flex gap-4">
+      <span class="text-emerald-500 flex items-center gap-1">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+        API Engine: Active
+      </span>
+      <span>v1.0.0</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const form = document.getElementById('newsletter-form');
+  const success = document.getElementById('footer-success');
+  if (form && success) {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      success.classList.remove('hidden');
+      form.querySelector('input')!.value = '';
+      setTimeout(() => {
+        success.classList.add('hidden');
+      }, 3000);
+    });
+  }
+</script>
