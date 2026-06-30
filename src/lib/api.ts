@@ -37,7 +37,7 @@ export async function searchPlaylists(
     if (apiKey && staticMatches.length > 0) {
       const matchIds = staticMatches.map(p => STATIC_SLUG_MAP[p.slug]).filter(Boolean);
       if (matchIds.length > 0) {
-        const detailsMap = await getPlaylistDetailsBatch(matchIds, apiKey);
+        const detailsMap = await getPlaylistDetailsBatch(matchIds, apiKey, env);
         staticMatches.forEach((staticItem, idx) => {
           const ytId = STATIC_SLUG_MAP[staticItem.slug];
           const ytDetails = detailsMap[ytId];
@@ -84,7 +84,7 @@ export async function searchPlaylists(
         const staticIds = Object.values(STATIC_SLUG_MAP);
         let detailsMap: Record<string, any> = {};
         try {
-          detailsMap = await getPlaylistDetailsBatch(staticIds, apiKey);
+          detailsMap = await getPlaylistDetailsBatch(staticIds, apiKey, env);
         } catch (e) {
           console.error('Failed to resolve static templates details on search fallback:', e);
         }
@@ -108,7 +108,7 @@ export async function searchPlaylists(
     // Return all static templates resolved to YouTube IDs
     if (apiKey) {
       const staticIds = Object.values(STATIC_SLUG_MAP);
-      const detailsMap = await getPlaylistDetailsBatch(staticIds, apiKey);
+      const detailsMap = await getPlaylistDetailsBatch(staticIds, apiKey, env);
       results = PLAYLISTS.map(p => {
         const ytId = STATIC_SLUG_MAP[p.slug];
         const ytDetails = detailsMap[ytId];
@@ -165,10 +165,10 @@ export async function getPlaylistBySlug(slug: string, apiKey: string = '', env?:
 
   // Fetch playlist details via official API
   if (apiKey && (ytId.startsWith('PL') || ytId.length > 10)) {
-    const detailsMap = await getPlaylistDetailsBatch([ytId], apiKey);
+    const detailsMap = await getPlaylistDetailsBatch([ytId], apiKey, env);
     const details = detailsMap[ytId];
     if (details) {
-      const videos = await getPlaylistVideos(ytId, apiKey);
+      const videos = await getPlaylistVideos(ytId, apiKey, env);
       
       // Look up static metadata templates for static playlists to keep reviews & roadmaps
       const staticTemplate = PLAYLISTS.find(p => p.slug === slug || STATIC_SLUG_MAP[p.slug] === ytId);

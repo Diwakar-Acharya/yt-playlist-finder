@@ -52,7 +52,7 @@ export const GET: APIRoute = async (context) => {
     // Process in batches of 50 to respect YouTube API batch constraints
     for (let i = 0; i < playlistIds.length; i += 50) {
       const batch = playlistIds.slice(i, i + 50);
-      const detailsMap = await getPlaylistDetailsBatch(batch, apiKey);
+      const detailsMap = await getPlaylistDetailsBatch(batch, apiKey, env);
 
       for (const id of batch) {
         const details = detailsMap[id];

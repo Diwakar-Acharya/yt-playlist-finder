@@ -90,15 +90,50 @@ export async function validatePlaylist(playlistId: string, apiKey: string): Prom
 }
 
 // Get detailed playlist metadata in a batch to minimize API quota consumption
-export async function getPlaylistDetailsBatch(playlistIds: string[], apiKey: string): Promise<Record<string, any>> {
+export async function getPlaylistDetailsBatch(playlistIds: string[], apiKey: string, env?: any): Promise<Record<string, any>> {
   if (playlistIds.length === 0 || !apiKey) return {};
   try {
     const results: Record<string, any> = {};
     const normalIds = playlistIds.filter(id => !id.startsWith('video_'));
     const videoIds = playlistIds.filter(id => id.startsWith('video_')).map(id => id.replace('video_', ''));
 
-    if (normalIds.length > 0) {
-      const idsParam = normalIds.join(',');
+    // Try to load cached values first
+    const missingNormalIds: string[] = [];
+    const missingVideoIds: string[] = [];
+
+    if (env?.SESSION) {
+      for (const id of normalIds) {
+        try {
+          const cached = await env.SESSION.get(`details:${id}`);
+          if (cached) {
+            results[id] = JSON.parse(cached);
+          } else {
+            missingNormalIds.push(id);
+          }
+        } catch (err) {
+          missingNormalIds.push(id);
+        }
+      }
+      for (const id of videoIds) {
+        const fullId = `video_${id}`;
+        try {
+          const cached = await env.SESSION.get(`details:${fullId}`);
+          if (cached) {
+            results[fullId] = JSON.parse(cached);
+          } else {
+            missingVideoIds.push(id);
+          }
+        } catch (err) {
+          missingVideoIds.push(id);
+        }
+      }
+    } else {
+      missingNormalIds.push(...normalIds);
+      missingVideoIds.push(...videoIds);
+    }
+
+    if (missingNormalIds.length > 0) {
+      const idsParam = missingNormalIds.join(',');
       const url = `https://www.googleapis.com/youtube/v3/playlists?part=snippet,contentDetails&id=${idsParam}&maxResults=50&key=${apiKey}`;
       const res = await fetch(url);
       if (res.ok) {
@@ -113,7 +148,7 @@ export async function getPlaylistDetailsBatch(playlistIds: string[], apiKey: str
             console.log('[DEBUG] getPlaylistDetailsBatch:', { playlistId: id, finalURL: buildPlaylistURL(id), thumbnail });
             if (!id || !thumbnail || !title) continue;
 
-            results[id] = {
+            const entry = {
               playlist_id: id,
               title,
               description: item.snippet?.description || '',
@@ -122,13 +157,18 @@ export async function getPlaylistDetailsBatch(playlistIds: string[], apiKey: str
               thumbnail_url: thumbnail,
               videoCount: item.contentDetails?.itemCount || 0
             };
+            results[id] = entry;
+
+            if (env?.SESSION) {
+              await env.SESSION.put(`details:${id}`, JSON.stringify(entry), { expirationTtl: 86400 }).catch(() => {});
+            }
           }
         }
       }
     }
 
-    if (videoIds.length > 0) {
-      const idsParam = videoIds.join(',');
+    if (missingVideoIds.length > 0) {
+      const idsParam = missingVideoIds.join(',');
       const url = `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails,statistics&id=${idsParam}&key=${apiKey}`;
       const res = await fetch(url);
       if (res.ok) {
@@ -139,7 +179,8 @@ export async function getPlaylistDetailsBatch(playlistIds: string[], apiKey: str
             const thumbnail = parseThumbnail(item.snippet?.thumbnails);
             const title = item.snippet?.title || '';
             if (!id || !thumbnail || !title) continue;
-            results[`video_${id}`] = {
+            
+            const entry = {
               playlist_id: `video_${id}`,
               title,
               description: item.snippet?.description || '',
@@ -148,6 +189,11 @@ export async function getPlaylistDetailsBatch(playlistIds: string[], apiKey: str
               thumbnail_url: thumbnail,
               videoCount: 1
             };
+            results[`video_${id}`] = entry;
+
+            if (env?.SESSION) {
+              await env.SESSION.put(`details:video_${id}`, JSON.stringify(entry), { expirationTtl: 86400 }).catch(() => {});
+            }
           }
         }
       }
@@ -160,8 +206,15 @@ export async function getPlaylistDetailsBatch(playlistIds: string[], apiKey: str
 }
 
 // Fetch list of videos inside a playlist
-export async function getPlaylistVideos(playlistId: string, apiKey: string): Promise<VideoItem[]> {
+export async function getPlaylistVideos(playlistId: string, apiKey: string, env?: any): Promise<VideoItem[]> {
   if (!playlistId || !apiKey) return [];
+
+  if (env?.SESSION) {
+    try {
+      const cached = await env.SESSION.get(`videos:${playlistId}`);
+      if (cached) return JSON.parse(cached);
+    } catch (err) {}
+  }
   
   if (playlistId.startsWith('video_')) {
     const videoId = playlistId.replace('video_', '');
@@ -172,11 +225,15 @@ export async function getPlaylistVideos(playlistId: string, apiKey: string): Pro
       const data = await res.json();
       if (data.items && data.items.length > 0) {
         const item = data.items[0];
-        return [{
+        const vids = [{
           id: videoId,
           title: item.snippet?.title || 'Video Title',
           duration: '15:00'
         }];
+        if (env?.SESSION) {
+          await env.SESSION.put(`videos:${playlistId}`, JSON.stringify(vids), { expirationTtl: 86400 }).catch(() => {});
+        }
+        return vids;
       }
     } catch (e) {
       return [];
@@ -202,6 +259,9 @@ export async function getPlaylistVideos(playlistId: string, apiKey: string): Pro
           });
         }
       }
+    }
+    if (videos.length > 0 && env?.SESSION) {
+      await env.SESSION.put(`videos:${playlistId}`, JSON.stringify(videos), { expirationTtl: 86400 }).catch(() => {});
     }
     return videos;
   } catch (err) {
