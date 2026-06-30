@@ -1,9 +1,11 @@
 import { PLAYLISTS, ROADMAPS, type Playlist, type Roadmap } from './db';
 import { 
   searchYouTubePlaylists, 
+  scrapeYouTubePlaylists,
   getPlaylistDetailsBatch, 
   getPlaylistVideos, 
-  STATIC_SLUG_MAP 
+  STATIC_SLUG_MAP,
+  scrapeYouTubePlaylistDetails
 } from './youtube';
 
 export interface SearchFilters {
@@ -67,6 +69,14 @@ export async function searchPlaylists(
     let ytResults: Playlist[] = [];
     if (apiKey) {
       ytResults = await searchYouTubePlaylists(q, apiKey, env);
+    } else {
+      // No API key – try direct scraper fallback
+      try {
+        ytResults = await scrapeYouTubePlaylists(q);
+        console.log(`[DEBUG] Scraper returned ${ytResults.length} results for "${q}"`);
+      } catch (err) {
+        console.error('scrapeYouTubePlaylists failed:', err);
+      }
     }
 
     // Combine and deduplicate by slug/playlist_id
@@ -164,13 +174,46 @@ export async function getPlaylistBySlug(slug: string, apiKey: string = '', env?:
   // Resolve slug if it is mapped to a static playlist
   const ytId = STATIC_SLUG_MAP[slug] || slug;
 
-  // Fetch playlist details via official API
-  if (apiKey && (ytId.startsWith('PL') || ytId.length > 10)) {
-    const detailsMap = await getPlaylistDetailsBatch([ytId], apiKey, env);
-    const details = detailsMap[ytId];
+  // Fetch playlist details via official API with Scraper fallback
+  let details: any = undefined;
+  let videos: any[] = [];
+  let fetchedViaScraper = false;
+
+  if (ytId.startsWith('PL') || ytId.length > 10) {
+    if (apiKey) {
+      try {
+        const detailsMap = await getPlaylistDetailsBatch([ytId], apiKey, env);
+        details = detailsMap[ytId];
+        if (details) {
+          videos = await getPlaylistVideos(ytId, apiKey, env);
+        }
+      } catch (err) {
+        console.error('getPlaylistBySlug official API failed, falling back to scraper:', err);
+      }
+    }
+
+    // Scraper fallback if details not found via official API
+    if (!details) {
+      try {
+        console.log(`[DEBUG] Official API did not return details for ${ytId}. Falling back to scraper...`);
+        const scraped = await scrapeYouTubePlaylistDetails(ytId);
+        if (scraped) {
+          details = {
+            title: scraped.title,
+            description: scraped.description,
+            channel: scraped.channel,
+            thumbnail_url: scraped.thumbnail,
+            videoCount: scraped.videoCount
+          };
+          videos = scraped.videos;
+          fetchedViaScraper = true;
+        }
+      } catch (err) {
+        console.error('getPlaylistBySlug scraper fallback failed:', err);
+      }
+    }
+
     if (details) {
-      const videos = await getPlaylistVideos(ytId, apiKey, env);
-      
       // Look up static metadata templates for static playlists to keep reviews & roadmaps
       const staticTemplate = PLAYLISTS.find(p => p.slug === slug || STATIC_SLUG_MAP[p.slug] === ytId);
 
@@ -214,7 +257,8 @@ export async function getPlaylistBySlug(slug: string, apiKey: string = '', env?:
         ],
         videos,
         alternatives: staticTemplate?.alternatives || [],
-        roadmaps: staticTemplate?.roadmaps || ['software-engineer']
+        roadmaps: staticTemplate?.roadmaps || ['software-engineer'],
+        isFallback: fetchedViaScraper
       };
     }
   }
