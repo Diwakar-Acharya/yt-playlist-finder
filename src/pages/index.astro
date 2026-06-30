@@ -16,12 +16,24 @@ import {
   Cpu
 } from '@lucide/astro';
 
+import { 
+  validateQuery, 
+  validateDifficulty, 
+  validateDuration, 
+  validateSort 
+} from '../lib/validation';
+
 // Parse query params in Astro frontmatter (Server-Side)
 const url = new URL(Astro.request.url);
-const query = url.searchParams.get('q') || '';
-const difficulty = url.searchParams.get('difficulty') || '';
-const duration = url.searchParams.get('duration') || '';
-const sort = url.searchParams.get('sort') || 'best';
+const rawQuery = url.searchParams.get('q') || '';
+const rawDifficulty = url.searchParams.get('difficulty') || '';
+const rawDuration = url.searchParams.get('duration') || '';
+const rawSort = url.searchParams.get('sort') || 'best';
+
+const query = validateQuery(rawQuery);
+const difficulty = validateDifficulty(rawDifficulty) || '';
+const duration = validateDuration(rawDuration) || '';
+const sort = validateSort(rawSort);
 
 const env = await getCloudflareEnv();
 const apiKey = env?.YOUTUBE_API_KEY || import.meta.env.YOUTUBE_API_KEY || '';

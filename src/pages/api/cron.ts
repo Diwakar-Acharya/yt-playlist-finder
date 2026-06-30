@@ -12,9 +12,17 @@ export const GET: APIRoute = async (context) => {
   // Authorization check
   const urlObj = new URL(context.request.url);
   const token = urlObj.searchParams.get('token');
-  const expectedToken = env?.CRON_TOKEN || 'nightly_refresh_token';
+  const expectedToken = env?.CRON_TOKEN || import.meta.env.CRON_TOKEN || '';
   
-  if (token !== expectedToken && context.request.headers.get('Authorization') !== `Bearer ${expectedToken}`) {
+  if (!expectedToken) {
+    console.error('[SECURITY ERROR] CRON_TOKEN environment variable is not defined.');
+    return new Response('Cron authorization token is not configured on server', { status: 500 });
+  }
+  
+  const authHeader = context.request.headers.get('Authorization');
+  const isAuthorized = (token && token === expectedToken) || (authHeader && authHeader === `Bearer ${expectedToken}`);
+  
+  if (!isAuthorized) {
     return new Response('Unauthorized', { status: 401 });
   }
 

@@ -1,12 +1,18 @@
 ---
 import { getChannelUrl } from '../../lib/youtube';
+import { validateCreator } from '../../lib/validation';
 
 const { creator } = Astro.params;
 if (!creator) {
   return Astro.redirect('/404');
 }
 
-const cleanCreator = decodeURIComponent(creator);
+const decodedCreator = decodeURIComponent(creator);
+const cleanCreator = validateCreator(decodedCreator);
+if (!cleanCreator) {
+  return Astro.redirect('/404');
+}
+
 const targetUrl = getChannelUrl(cleanCreator);
 
 return Astro.redirect(targetUrl, 302);

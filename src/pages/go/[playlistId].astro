@@ -1,22 +1,24 @@
 ---
 import { validatePlaylist, getCloudflareEnv, STATIC_SLUG_MAP } from '../../lib/youtube';
+import { validatePlaylistId } from '../../lib/validation';
 
 const { playlistId } = Astro.params;
+const cleanPlaylistId = validatePlaylistId(playlistId);
+if (!cleanPlaylistId) {
+  return Astro.redirect('/404');
+}
+
 const env = await getCloudflareEnv();
 const apiKey = env?.YOUTUBE_API_KEY || import.meta.env.YOUTUBE_API_KEY || '';
 
-if (!playlistId) {
-  return Astro.redirect('/404');
-}
-
 // Perform server-side validation before redirecting
-const isValid = await validatePlaylist(playlistId, apiKey);
+const isValid = await validatePlaylist(cleanPlaylistId, apiKey);
 if (!isValid) {
-  console.log('[DEBUG] Validation failed for redirect page:', playlistId);
+  console.log('[DEBUG] Validation failed for redirect page:', cleanPlaylistId);
   return Astro.redirect('/404');
 }
 
-const targetId = STATIC_SLUG_MAP[playlistId] || playlistId;
+const targetId = STATIC_SLUG_MAP[cleanPlaylistId] || cleanPlaylistId;
 console.log('[DEBUG] Redirecting to YouTube playlist:', { targetId });
 return Astro.redirect(`https://www.youtube.com/playlist?list=${targetId}`, 302);
 ---

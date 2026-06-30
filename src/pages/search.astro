@@ -3,15 +3,31 @@ import Layout from '../layouts/Layout.astro';
 import { searchPlaylists } from '../lib/api';
 import { Search as SearchIcon, SlidersHorizontal, ArrowRight, Cpu, GraduationCap, ChevronDown } from '@lucide/astro';
 
+import { 
+  validateQuery, 
+  validateDifficulty, 
+  validateDuration, 
+  validateSort 
+} from '../lib/validation';
+import { getCloudflareEnv } from '../lib/youtube';
+
 const url = new URL(Astro.request.url);
-const query = url.searchParams.get('q') || '';
-const difficulty = url.searchParams.get('difficulty') || '';
-const duration = url.searchParams.get('duration') || '';
-const sort = url.searchParams.get('sort') || 'best';
+const rawQuery = url.searchParams.get('q') || '';
+const rawDifficulty = url.searchParams.get('difficulty') || '';
+const rawDuration = url.searchParams.get('duration') || '';
+const rawSort = url.searchParams.get('sort') || 'best';
+
+const query = validateQuery(rawQuery);
+const difficulty = validateDifficulty(rawDifficulty) || '';
+const duration = validateDuration(rawDuration) || '';
+const sort = validateSort(rawSort);
+
+const env = await getCloudflareEnv();
+const apiKey = env?.YOUTUBE_API_KEY || import.meta.env.YOUTUBE_API_KEY || '';
 
 // Run search on server
 const playlists = query 
-  ? await searchPlaylists(query, { difficulty, duration }, sort)
+  ? await searchPlaylists(query, { difficulty, duration }, sort, apiKey, env)
   : [];
 
 // Breadcrumbs

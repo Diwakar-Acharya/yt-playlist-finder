@@ -76,6 +76,9 @@ if (schema) {
       gtag('config', 'G-01EM1V8RB9');
     </script>
     
+    <!-- Google AdSense -->
+    <script is:inline async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6852093563333288" crossorigin="anonymous"></script>
+    
     <!-- Favicon Links -->
     <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -116,7 +119,7 @@ if (schema) {
 
     <!-- Structured Data Schema Markup -->
     {schemaList.map(s => (
-      <script type="application/ld+json" set:html={JSON.stringify(s)} />
+      <script type="application/ld+json" set:html={JSON.stringify(s).replace(/</g, '\\u003c').replace(/>/g, '\\u003e')} />
     ))}
   </head>
   <body class="min-h-screen bg-black text-white relative selection:bg-white selection:text-black antialiased gradient-mesh">

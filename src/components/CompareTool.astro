@@ -66,6 +66,16 @@ import { GitCompare, Plus, Check, ArrowLeftRight, CheckCircle, HelpCircle } from
 <script is:inline define:vars={{ PLAYLISTS }}>
   // Interactive client-side comparison calculator
   document.addEventListener('DOMContentLoaded', () => {
+    function escapeHTML(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
     const selectA = document.getElementById('compare-select-a');
     const selectB = document.getElementById('compare-select-b');
     const emptyState = document.getElementById('compare-empty-state');
@@ -126,21 +136,28 @@ import { GitCompare, Plus, Check, ArrowLeftRight, CheckCircle, HelpCircle } from
         return 'text-emerald-400 border-emerald-500/20 bg-emerald-950/10';
       };
 
+      const escapedThumbnail = escapeHTML(playlist.thumbnail);
+      const escapedTitle = escapeHTML(playlist.title);
+      const escapedChannel = escapeHTML(playlist.channel);
+      const escapedSlug = escapeHTML(playlist.slug);
+      const escapedDifficulty = escapeHTML(playlist.difficulty);
+      const escapedLanguage = escapeHTML(playlist.language);
+
       // Find shared and unique topics
-      const sharedTopics = playlist.topics.filter(t => otherPlaylist?.topics.some(ot => ot.toLowerCase() === t.toLowerCase()) || false);
-      const uniqueTopics = playlist.topics.filter(t => !otherPlaylist?.topics.some(ot => ot.toLowerCase() === t.toLowerCase()) || false);
+      const sharedTopics = (playlist.topics || []).filter(t => (otherPlaylist?.topics || []).some(ot => ot.toLowerCase() === t.toLowerCase()) || false);
+      const uniqueTopics = (playlist.topics || []).filter(t => !(otherPlaylist?.topics || []).some(ot => ot.toLowerCase() === t.toLowerCase()) || false);
 
       return `
         <div class="flex flex-col gap-4">
           <!-- Playlist Header -->
           <div class="flex gap-4">
-            <img src="${playlist.thumbnail}" alt="${playlist.title}" class="w-24 aspect-video object-cover rounded-lg border border-white/5 bg-zinc-950" />
+            <img src="${escapedThumbnail}" alt="${escapedTitle}" class="w-24 aspect-video object-cover rounded-lg border border-white/5 bg-zinc-950" />
             <div class="flex flex-col justify-between py-1">
               <div>
-                <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500">${playlist.channel}</span>
-                <h4 class="text-sm font-bold tracking-tight text-white line-clamp-1 mt-0.5">${playlist.title}</h4>
+                <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500">${escapedChannel}</span>
+                <h4 class="text-sm font-bold tracking-tight text-white line-clamp-1 mt-0.5">${escapedTitle}</h4>
               </div>
-              <a href="/playlist/${playlist.slug}" class="text-xs text-accent hover:underline flex items-center gap-1">
+              <a href="/playlist/${escapedSlug}" class="text-xs text-accent hover:underline flex items-center gap-1">
                 View detail page →
               </a>
             </div>
@@ -150,9 +167,9 @@ import { GitCompare, Plus, Check, ArrowLeftRight, CheckCircle, HelpCircle } from
           <div class="flex items-center justify-between p-4 rounded-xl border border-white/5 bg-zinc-950/40">
             <div>
               <span class="text-[10px] font-mono text-zinc-500 block uppercase">Weighted Score</span>
-              <span class="text-2xl font-bold tracking-tight text-white font-mono">${playlist.score}<span class="text-xs text-zinc-500 font-normal">/100</span></span>
+              <span class="text-2xl font-bold tracking-tight text-white font-mono">${Number(playlist.score) || 0}<span class="text-xs text-zinc-500 font-normal">/100</span></span>
             </div>
-            <span class="text-[10px] font-mono border px-2.5 py-0.5 rounded-full ${getScoreBadgeClass(playlist.score)}">
+            <span class="text-[10px] font-mono border px-2.5 py-0.5 rounded-full ${getScoreBadgeClass(Number(playlist.score) || 0)}">
               ${playlist.score >= 95 ? 'Elite Tier' : playlist.score >= 90 ? 'Top Tier' : 'Highly Rated'}
             </span>
           </div>
@@ -161,19 +178,19 @@ import { GitCompare, Plus, Check, ArrowLeftRight, CheckCircle, HelpCircle } from
           <div class="grid grid-cols-2 gap-4 text-xs font-mono border-t border-b border-white/5 py-4">
             <div>
               <span class="text-zinc-500 block">Total Duration</span>
-              <span class="text-white font-semibold">${playlist.durationHours} Hours</span>
+              <span class="text-white font-semibold">${Number(playlist.durationHours) || 0} Hours</span>
             </div>
             <div>
               <span class="text-zinc-500 block">Video Count</span>
-              <span class="text-white font-semibold">${playlist.videoCount} Videos</span>
+              <span class="text-white font-semibold">${Number(playlist.videoCount) || 0} Videos</span>
             </div>
             <div>
               <span class="text-zinc-500 block">Difficulty Level</span>
-              <span class="text-white font-semibold">${playlist.difficulty}</span>
+              <span class="text-white font-semibold">${escapedDifficulty}</span>
             </div>
             <div>
               <span class="text-zinc-500 block">Language</span>
-              <span class="text-white font-semibold">${playlist.language}</span>
+              <span class="text-white font-semibold">${escapedLanguage}</span>
             </div>
           </div>
 
@@ -183,23 +200,23 @@ import { GitCompare, Plus, Check, ArrowLeftRight, CheckCircle, HelpCircle } from
             <div class="space-y-2 text-[11px] font-mono">
               <div class="flex justify-between">
                 <span class="text-zinc-400">User Reviews (35%)</span>
-                <span class="text-white">${playlist.scoreBreakdown.userReviews}/100</span>
+                <span class="text-white">${Number(playlist.scoreBreakdown?.userReviews) || 0}/100</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-zinc-400">Completion Rate (25%)</span>
-                <span class="text-white">${playlist.scoreBreakdown.completionRate}/100</span>
+                <span class="text-white">${Number(playlist.scoreBreakdown?.completionRate) || 0}/100</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-zinc-400">Playlist Structure (20%)</span>
-                <span class="text-white">${playlist.scoreBreakdown.playlistStructure}/100</span>
+                <span class="text-white">${Number(playlist.scoreBreakdown?.playlistStructure) || 0}/100</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-zinc-400">Recent Activity (10%)</span>
-                <span class="text-white">${playlist.scoreBreakdown.recentActivity}/100</span>
+                <span class="text-white">${Number(playlist.scoreBreakdown?.recentActivity) || 0}/100</span>
               </div>
               <div class="flex justify-between">
                 <span class="text-zinc-400">Creator Authority (10%)</span>
-                <span class="text-white">${playlist.scoreBreakdown.creatorAuthority}/100</span>
+                <span class="text-white">${Number(playlist.scoreBreakdown?.creatorAuthority) || 0}/100</span>
               </div>
             </div>
           </div>
@@ -211,21 +228,21 @@ import { GitCompare, Plus, Check, ArrowLeftRight, CheckCircle, HelpCircle } from
             <div class="space-y-2">
               <span class="text-[11px] font-mono text-zinc-400 block">Unique to this playlist (${uniqueTopics.length}):</span>
               <div class="flex flex-wrap gap-1.5">
-                ${uniqueTopics.length > 0 ? uniqueTopics.map(t => `<span class="px-2 py-0.5 rounded bg-zinc-900 border border-white/5 text-[10px] text-zinc-300">${t}</span>`).join('') : '<span class="text-[10px] text-zinc-500 font-mono">None</span>'}
+                ${uniqueTopics.length > 0 ? uniqueTopics.map(t => `<span class="px-2 py-0.5 rounded bg-zinc-900 border border-white/5 text-[10px] text-zinc-300">${escapeHTML(t)}</span>`).join('') : '<span class="text-[10px] text-zinc-500 font-mono">None</span>'}
               </div>
             </div>
 
             <div class="space-y-2">
               <span class="text-[11px] font-mono text-zinc-400 block">Shared topics (${sharedTopics.length}):</span>
               <div class="flex flex-wrap gap-1.5">
-                ${sharedTopics.length > 0 ? sharedTopics.map(t => `<span class="px-2 py-0.5 rounded bg-accent/5 border border-accent/10 text-[10px] text-accent/80">${t}</span>`).join('') : '<span class="text-[10px] text-zinc-500 font-mono">None</span>'}
+                ${sharedTopics.length > 0 ? sharedTopics.map(t => `<span class="px-2 py-0.5 rounded bg-accent/5 border border-accent/10 text-[10px] text-accent/80">${escapeHTML(t)}</span>`).join('') : '<span class="text-[10px] text-zinc-500 font-mono">None</span>'}
               </div>
             </div>
 
             <div class="space-y-2">
-              <span class="text-[11px] font-mono text-rose-400 block">Detected missing topics (${playlist.missingTopics.length}):</span>
+              <span class="text-[11px] font-mono text-rose-400 block">Detected missing topics (${playlist.missingTopics?.length || 0}):</span>
               <div class="flex flex-wrap gap-1.5">
-                ${playlist.missingTopics.map(t => `<span class="px-2 py-0.5 rounded bg-rose-950/10 border border-rose-500/20 text-[10px] text-rose-400">${t}</span>`).join('')}
+                ${(playlist.missingTopics || []).map(t => `<span class="px-2 py-0.5 rounded bg-rose-950/10 border border-rose-500/20 text-[10px] text-rose-400">${escapeHTML(t)}</span>`).join('')}
               </div>
             </div>
           </div>

@@ -5,12 +5,15 @@ import { searchPlaylists } from '../../../lib/api';
 import { getCloudflareEnv } from '../../../lib/youtube';
 import { ChevronLeft } from '@lucide/astro';
 
+import { validateTopic } from '../../../lib/validation';
+
 const { topic } = Astro.params;
-if (!topic) {
+const cleanTopicParam = validateTopic(topic);
+if (!cleanTopicParam) {
   return Astro.redirect('/404');
 }
 
-const cleanTopic = topic.trim().replace(/-/g, ' ');
+const cleanTopic = cleanTopicParam.trim().replace(/-/g, ' ');
 const titleCaseTopic = cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1);
 
 const env = await getCloudflareEnv();

@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { validateUrl } from '../../lib/validation';
 
 export const GET: APIRoute = async ({ request }) => {
   const urlObj = new URL(request.url);
@@ -8,15 +9,13 @@ export const GET: APIRoute = async ({ request }) => {
     return new Response('Missing url parameter', { status: 400 });
   }
 
-  // Security check to avoid open proxy vulnerability
-  const allowedHosts = ['ytimg.com', 'yt3.ggpht.com', 'googleusercontent.com', 'unsplash.com'];
-  const isAllowed = allowedHosts.some(host => targetUrl.includes(host));
-  if (!isAllowed) {
-    return new Response('Forbidden target host', { status: 403 });
+  const validatedUrl = validateUrl(targetUrl);
+  if (!validatedUrl) {
+    return new Response('Forbidden target host or invalid URL', { status: 403 });
   }
 
   try {
-    const res = await fetch(targetUrl, {
+    const res = await fetch(validatedUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
       }

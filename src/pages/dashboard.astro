@@ -128,9 +128,9 @@ import { Layers, Bookmark, Flame, Play, Clock, Sparkles, Plus, BookOpen, CheckCi
 
 <script is:inline define:vars={{ PLAYLISTS }}>
   document.addEventListener('DOMContentLoaded', () => {
-    function escapeHTML(str: string): string {
+    function escapeHTML(str) {
       if (!str) return '';
-      return str
+      return String(str)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -138,10 +138,10 @@ import { Layers, Bookmark, Flame, Play, Clock, Sparkles, Plus, BookOpen, CheckCi
         .replace(/'/g, '&#039;');
     }
 
-    function getChannelUrl(channelName: string): string {
+    function getChannelUrl(channelName) {
       if (!channelName) return 'https://www.youtube.com';
       const normalized = channelName.trim().toLowerCase();
-      const knownChannels: Record<string, string> = {
+      const knownChannels = {
         'deeplearning.ai': 'https://www.youtube.com/@Deeplearningai',
         'statquest with josh starmer': 'https://www.youtube.com/@statquest',
         'abdul bari': 'https://www.youtube.com/@abdul_bari',
@@ -194,9 +194,6 @@ import { Layers, Bookmark, Flame, Play, Clock, Sparkles, Plus, BookOpen, CheckCi
         const totalCount = activePlaylist.videoCount;
         const percent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
         
-        // Sum up completed duration (estimate 15 mins per video)
-        const completedMins = completedCount * 15;
-        
         if (activeMeta) activeMeta.textContent = `${activePlaylist.channel} • ${completedCount} / ${totalCount} Videos Complete`;
         if (activePercent) activePercent.textContent = `${percent}% Complete`;
         if (activeBar) activeBar.style.width = `${percent}%`;
@@ -238,41 +235,48 @@ import { Layers, Bookmark, Flame, Play, Clock, Sparkles, Plus, BookOpen, CheckCi
           return 'border-red-500/20 text-red-400 bg-red-950/10';
         };
 
+        const escapedThumbnail = escapeHTML(playlist.thumbnail);
+        const escapedTitle = escapeHTML(playlist.title);
+        const escapedChannel = escapeHTML(playlist.channel);
+        const escapedSlug = escapeHTML(playlist.slug);
+        const escapedDescription = escapeHTML(playlist.description);
+        const escapedDifficulty = escapeHTML(playlist.difficulty);
+
         return `
           <div class="group glass-panel rounded-2xl overflow-hidden glass-panel-hover flex flex-col justify-between h-full relative">
             <div class="relative w-full aspect-video overflow-hidden border-b border-white/5 bg-zinc-950">
-              <img src="${playlist.thumbnail}" alt="${playlist.title}" class="w-full h-full object-cover opacity-75 group-hover:scale-105 group-hover:opacity-90 transition-all duration-300" />
+              <img src="${escapedThumbnail}" alt="${escapedTitle}" class="w-full h-full object-cover opacity-75 group-hover:scale-105 group-hover:opacity-90 transition-all duration-300" />
               <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
               
               <div class="absolute bottom-3 left-3 flex items-center gap-2 z-10">
                 <span class="px-2.5 py-0.5 rounded-full bg-black/75 border border-white/5 text-[10px] font-mono text-white flex items-center gap-1">
-                  ${playlist.videoCount} videos
+                  ${Number(playlist.videoCount) || 0} videos
                 </span>
                 <span class="px-2.5 py-0.5 rounded-full bg-black/75 border border-white/5 text-[10px] font-mono text-white flex items-center gap-1">
-                  ${playlist.durationHours} hours
+                  ${Number(playlist.durationHours) || 0} hours
                 </span>
               </div>
             </div>
 
-              <div class="p-6 flex-1 flex flex-col justify-between">
-                <div>
-                  <a 
-                    href="${getChannelUrl(playlist.channel)}"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="text-[10px] font-mono uppercase tracking-wider text-zinc-500 hover:text-white transition-colors inline-flex items-center gap-0.5"
-                  >
-                    ${escapeHTML(playlist.channel)} <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                  </a>
-                  <h3 class="text-base font-bold tracking-tight text-white line-clamp-2 mt-1 leading-snug group-hover:text-accent transition-colors">${escapeHTML(playlist.title)}</h3>
-                  <p class="text-xs text-zinc-400 line-clamp-2 leading-relaxed mt-2 mb-4">${escapeHTML(playlist.description)}</p>
-                </div>
+            <div class="p-6 flex-1 flex flex-col justify-between">
+              <div>
+                <a 
+                  href="${getChannelUrl(escapedChannel)}"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-[10px] font-mono uppercase tracking-wider text-zinc-500 hover:text-white transition-colors inline-flex items-center gap-0.5"
+                >
+                  ${escapedChannel} <svg class="w-2.5 h-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                </a>
+                <h3 class="text-base font-bold tracking-tight text-white line-clamp-2 mt-1 leading-snug group-hover:text-accent transition-colors">${escapedTitle}</h3>
+                <p class="text-xs text-zinc-400 line-clamp-2 leading-relaxed mt-2 mb-4">${escapedDescription}</p>
+              </div>
 
               <div class="border-t border-white/5 pt-4 flex items-center justify-between">
                 <!-- Simple Score Indicator -->
                 <div class="flex items-center gap-2">
                   <div class="w-8 h-8 rounded-full border border-accent/20 bg-accent/5 flex items-center justify-center font-mono font-bold text-xs text-white">
-                    ${playlist.score}
+                    ${Number(playlist.score) || 0}
                   </div>
                   <div class="flex flex-col">
                     <span class="text-[8px] uppercase tracking-wider text-accent font-semibold font-mono">Score</span>
@@ -280,14 +284,14 @@ import { Layers, Bookmark, Flame, Play, Clock, Sparkles, Plus, BookOpen, CheckCi
                   </div>
                 </div>
 
-                <span class="text-[9px] uppercase px-2 py-0.5 rounded border ${getDifficultyBadge(playlist.difficulty)}">
-                  ${playlist.difficulty}
+                <span class="text-[9px] uppercase px-2 py-0.5 rounded border ${getDifficultyBadge(escapedDifficulty)}">
+                  ${escapedDifficulty}
                 </span>
               </div>
             </div>
 
             <div class="px-6 pb-6 pt-2 flex gap-3">
-              <a href="/playlist/${playlist.slug}" class="flex-1 py-2 px-4 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-lg">
+              <a href="/playlist/${escapedSlug}" class="flex-1 py-2 px-4 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-lg">
                 Start Learning
               </a>
             </div>

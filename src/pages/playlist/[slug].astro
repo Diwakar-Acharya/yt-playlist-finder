@@ -21,16 +21,19 @@ import {
   HelpCircle
 } from '@lucide/astro';
 
+import { validateSlug } from '../../lib/validation';
+
 // Serves page dynamically in SSR mode
 const { slug } = Astro.params;
-if (!slug) {
+const cleanSlug = validateSlug(slug);
+if (!cleanSlug) {
   return Astro.redirect('/404');
 }
 
 const env = await getCloudflareEnv();
 const apiKey = env?.YOUTUBE_API_KEY || import.meta.env.YOUTUBE_API_KEY || '';
 
-const playlist = await getPlaylistBySlug(slug, apiKey, env);
+const playlist = await getPlaylistBySlug(cleanSlug, apiKey, env);
 
 if (!playlist) {
   return Astro.redirect('/404');

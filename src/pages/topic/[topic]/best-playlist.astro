@@ -1,25 +1,31 @@
 ---
 import Layout from '../../../layouts/Layout.astro';
 import { searchPlaylists, getPlaylistBySlug } from '../../../lib/api';
-import { getChannelUrl } from '../../../lib/youtube';
+import { getChannelUrl, getCloudflareEnv } from '../../../lib/youtube';
 import { Award, ArrowLeft, Play, Bookmark, CheckCircle2, ChevronRight, HelpCircle } from '@lucide/astro';
 
+import { validateTopic } from '../../../lib/validation';
+
 const { topic } = Astro.params;
-if (!topic) {
+const cleanTopicParam = validateTopic(topic);
+if (!cleanTopicParam) {
   return Astro.redirect('/404');
 }
 
-const cleanTopic = topic.trim().replace(/-/g, ' ');
+const cleanTopic = cleanTopicParam.trim().replace(/-/g, ' ');
 const titleCaseTopic = cleanTopic.charAt(0).toUpperCase() + cleanTopic.slice(1);
 
-const playlists = await searchPlaylists(cleanTopic);
+const env = await getCloudflareEnv();
+const apiKey = env?.YOUTUBE_API_KEY || import.meta.env.YOUTUBE_API_KEY || '';
+
+const playlists = await searchPlaylists(cleanTopic, {}, 'best', apiKey, env);
 // Find the single highest scoring playlist
 const bestPlaylist = playlists.length > 0 ? [...playlists].sort((a, b) => b.score - a.score)[0] : null;
 
 // Populate detail videos if they are missing
 let hydratedPlaylist = null;
 if (bestPlaylist) {
-  const check = await getPlaylistBySlug(bestPlaylist.slug);
+  const check = await getPlaylistBySlug(bestPlaylist.slug, apiKey, env);
   hydratedPlaylist = check || bestPlaylist;
 }
 

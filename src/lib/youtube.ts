@@ -207,7 +207,11 @@ export async function searchYouTubePlaylists(query: string, apiKey: string, env?
 
       // Save to cache
       if (finalIds.length > 0 && env?.SESSION) {
-        await env.SESSION.put(cacheKey, JSON.stringify(finalIds), { expirationTtl: 86400 });
+        try {
+          await env.SESSION.put(cacheKey, JSON.stringify(finalIds), { expirationTtl: 86400 });
+        } catch (cacheErr) {
+          console.warn('Failed to write query search cache to KV (possibly quota exceeded):', cacheErr);
+        }
       }
     } catch (err) {
       console.error('YouTube API Search Request failed:', err);
