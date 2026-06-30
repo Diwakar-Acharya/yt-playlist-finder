@@ -45,6 +45,7 @@ export interface Playlist {
   videos: VideoItem[];
   alternatives: string[]; // slugs
   roadmaps: string[];     // roadmap IDs
+  isFallback?: boolean;
 }
 
 export interface Roadmap {

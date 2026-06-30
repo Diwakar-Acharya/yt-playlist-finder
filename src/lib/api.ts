@@ -97,11 +97,12 @@ export async function searchPlaylists(
             title: ytDetails?.title || p.title,
             thumbnail: ytDetails?.thumbnail_url || p.thumbnail,
             videoCount: ytDetails?.videoCount || p.videoCount,
-            durationHours: ytDetails ? Math.round(ytDetails.videoCount * 0.4) || 2 : p.durationHours
+            durationHours: ytDetails ? Math.round(ytDetails.videoCount * 0.4) || 2 : p.durationHours,
+            isFallback: true
           };
         });
       } else {
-        results = [...PLAYLISTS];
+        results = PLAYLISTS.map(p => ({ ...p, isFallback: true }));
       }
     }
   } else {

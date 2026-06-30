@@ -246,7 +246,11 @@ const faqSchema = {
           )}
 
           <div class="flex items-center justify-between text-xs text-text-muted font-mono border-b border-white/5 pb-3">
-            <span>Found {playlists.length} {playlists.length === 1 ? 'playlist' : 'playlists'} for "{query}"</span>
+            {playlists.length > 0 && playlists[0].isFallback ? (
+              <span>No direct results found for "{query}". Showing popular courses:</span>
+            ) : (
+              <span>Found {playlists.length} {playlists.length === 1 ? 'playlist' : 'playlists'} for "{query}"</span>
+            )}
             <span>Ranked by quality</span>
           </div>
 

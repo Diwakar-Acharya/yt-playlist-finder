@@ -173,7 +173,15 @@ const getDifficultyBadge = (diff: string) => {
       <!-- Listings Grid -->
       <main class="flex-1 space-y-6">
         <div class="flex items-center justify-between text-xs text-text-muted font-mono border-b border-white/5 pb-3">
-          <span>{query ? `Found ${playlists.length} results` : 'Enter a query to start search'}</span>
+          {query ? (
+            playlists.length > 0 && playlists[0].isFallback ? (
+              <span>No direct results found for "{query}". Showing popular courses:</span>
+            ) : (
+              <span>Found {playlists.length} results for "{query}"</span>
+            )
+          ) : (
+            <span>Enter a query to start search</span>
+          )}
           <span>Ranked by quality</span>
         </div>
 
