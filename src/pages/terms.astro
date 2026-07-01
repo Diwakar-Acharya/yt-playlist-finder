@@ -1,0 +1,208 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const breadcrumbs = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://youtubeplaylistfinder.com/" },
+    { "@type": "ListItem", "position": 2, "name": "Terms of Service", "item": "https://youtubeplaylistfinder.com/terms" }
+  ]
+};
+---
+
+<Layout 
+  title="Terms of Service | youtubeplaylistfinder"
+  description="Read the terms of service for youtubeplaylistfinder.com. Understand usage guidelines, disclaimers, and liabilities."
+  canonical="https://youtubeplaylistfinder.com/terms"
+  schema={breadcrumbs}
+>
+  <!-- Scroll Progress Indicator -->
+  <div class="fixed top-0 left-0 w-full h-1 z-[60] bg-zinc-950">
+    <div id="scroll-bar" class="h-full bg-accent w-0 transition-all duration-75"></div>
+  </div>
+
+  <div class="flex flex-col lg:flex-row gap-10 mt-6 relative items-start">
+    <!-- Sticky Table of Contents -->
+    <aside class="w-full lg:w-64 shrink-0 lg:sticky lg:top-24 space-y-4 order-2 lg:order-1 glass-panel p-6 rounded-2xl border border-white/5">
+      <h3 class="text-xs font-mono uppercase tracking-wider text-white border-b border-white/10 pb-2">Table of Contents</h3>
+      <nav class="space-y-2 text-xs font-mono">
+        <a href="#acceptance" class="block text-text-secondary hover:text-white transition-colors duration-150 py-1 border-l-2 border-transparent pl-3 [&.active]:border-accent [&.active]:text-white">Acceptance</a>
+        <a href="#description" class="block text-text-secondary hover:text-white transition-colors duration-150 py-1 border-l-2 border-transparent pl-3 [&.active]:border-accent [&.active]:text-white">Description</a>
+        <a href="#responsibilities" class="block text-text-secondary hover:text-white transition-colors duration-150 py-1 border-l-2 border-transparent pl-3 [&.active]:border-accent [&.active]:text-white">Responsibilities</a>
+        <a href="#ip" class="block text-text-secondary hover:text-white transition-colors duration-150 py-1 border-l-2 border-transparent pl-3 [&.active]:border-accent [&.active]:text-white">Intellectual Property</a>
+        <a href="#liability" class="block text-text-secondary hover:text-white transition-colors duration-150 py-1 border-l-2 border-transparent pl-3 [&.active]:border-accent [&.active]:text-white">Limitation of Liability</a>
+        <a href="#changes" class="block text-text-secondary hover:text-white transition-colors duration-150 py-1 border-l-2 border-transparent pl-3 [&.active]:border-accent [&.active]:text-white">Changes to Terms</a>
+        <a href="#compliance" class="block text-text-secondary hover:text-white transition-colors duration-150 py-1 border-l-2 border-transparent pl-3 [&.active]:border-accent [&.active]:text-white">Compliance</a>
+        <a href="#contact" class="block text-text-secondary hover:text-white transition-colors duration-150 py-1 border-l-2 border-transparent pl-3 [&.active]:border-accent [&.active]:text-white">Contact Us</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <article class="flex-1 space-y-12 order-1 lg:order-2 glass-panel p-8 md:p-10 rounded-3xl border border-white/5 bg-zinc-950/20 backdrop-blur-md">
+      <header class="border-b border-white/5 pb-6">
+        <span class="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold">Legal Documentation</span>
+        <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-white mt-1">Terms of Service</h1>
+        <p class="text-xs text-text-secondary mt-2">Last updated: July 1, 2026</p>
+      </header>
+
+      <div class="space-y-8 text-sm text-text-secondary leading-relaxed">
+
+        <!-- Acceptance of Terms -->
+        <section id="acceptance" class="scroll-mt-24 space-y-4">
+          <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            <span class="text-accent font-mono text-xs">01.</span> Acceptance of Terms
+          </h2>
+          <p>
+            Welcome to youtubeplaylistfinder.com (the "Website"). By accessing, browsing, or using this Website, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service (the "Terms"). If you do not agree to these Terms, you must immediately cease all access and use of the Website.
+          </p>
+        </section>
+
+        <!-- Description of Service -->
+        <section id="description" class="scroll-mt-24 space-y-4">
+          <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            <span class="text-accent font-mono text-xs">02.</span> Description of Service
+          </h2>
+          <p>
+            The Website helps users discover, browse, analyze, and track educational and study playlists on YouTube. It uses YouTube Data API Services to access public information (such as playlist titles, video counts, description fields, thumbnails, and channel metadata) to compute custom Quality Scores and learning roadmap sequences.
+          </p>
+        </section>
+
+        <!-- User Responsibilities -->
+        <section id="responsibilities" class="scroll-mt-24 space-y-4">
+          <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            <span class="text-accent font-mono text-xs">03.</span> User Responsibilities
+          </h2>
+          <p>
+            When utilizing the Website, you agree to comply with all applicable local, national, and international laws. Additionally, you agree not to:
+          </p>
+          <ul class="list-disc pl-5 space-y-2 text-xs">
+            <li>Abuse, spam, or overload the official YouTube Data API endpoints or our servers.</li>
+            <li>Incorporate the search results or website algorithms systematically into separate commercial applications or automated databases without prior consent.</li>
+            <li>Scrape, index, or download website pages using scripts, spiders, or scrapers.</li>
+            <li>Reverse engineer or attempt to extract the source code of the platform.</li>
+            <li>Generate excessive automated requests that interfere with service stability.</li>
+            <li>Violate the <a href="https://developers.google.com/youtube/terms/api-services-terms-of-service" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">YouTube API Services Terms of Service</a> or the general <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" class="text-accent hover:underline">YouTube Terms of Service</a>.</li>
+          </ul>
+        </section>
+
+        <!-- Intellectual Property -->
+        <section id="ip" class="scroll-mt-24 space-y-4">
+          <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            <span class="text-accent font-mono text-xs">04.</span> Intellectual Property
+          </h2>
+          <p>
+            All YouTube trademarks, logos, brand names, and video contents belong to Google LLC and their respective creators. The Website does not host, upload, or own any external YouTube videos or playlist channels.
+          </p>
+          <p>
+            The custom design templates, quality scoring logic, database configuration mappings, and branding parameters of this Website remain our proprietary property.
+          </p>
+          <p class="font-semibold text-white">
+            "This product uses YouTube API Services but is not endorsed, sponsored, or certified by Google or YouTube."
+          </p>
+        </section>
+
+        <!-- Limitation of Liability -->
+        <section id="liability" class="scroll-mt-24 space-y-4">
+          <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            <span class="text-accent font-mono text-xs">05.</span> Limitation of Liability
+          </h2>
+          <p>
+            The Website and all materials are provided on an "as-is" and "as-available" basis without warranties of any kind. We do not guarantee that the service will be uninterrupted, error-free, or that playlist details will remain up-to-date indefinitely.
+          </p>
+          <p>
+            Under no circumstances shall the platform developers be liable for direct, indirect, incidental, or consequential damages (including data loss, learning setbacks, or hardware bugs) arising out of the use or inability to use the Website.
+          </p>
+        </section>
+
+        <!-- Changes to Terms -->
+        <section id="changes" class="scroll-mt-24 space-y-4">
+          <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            <span class="text-accent font-mono text-xs">06.</span> Changes to Terms
+          </h2>
+          <p>
+            We reserve the right to modify or replace these Terms of Service at any time. Any changes will be posted on this page with an updated "Last updated" date. Continued use of the Website after modifications constitutes acceptance of the new Terms.
+          </p>
+        </section>
+
+        <!-- Google Compliance Disclaimers -->
+        <section id="compliance" class="scroll-mt-24 space-y-4 border-t border-white/5 pt-6">
+          <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            <span class="text-accent font-mono text-xs">07.</span> Compliance Disclaimers
+          </h2>
+          <div class="p-5 rounded-2xl bg-zinc-900 border border-white/5 text-xs space-y-3 font-mono">
+            <p>
+              "This application uses YouTube API Services."
+            </p>
+            <p>
+              "This application is not affiliated with, endorsed by, sponsored by, or certified by Google LLC or YouTube."
+            </p>
+          </div>
+        </section>
+
+        <!-- Contact Us -->
+        <section id="contact" class="scroll-mt-24 space-y-4">
+          <h2 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+            <span class="text-accent font-mono text-xs">08.</span> Contact Us
+          </h2>
+          <p>
+            If you have any questions or require clarification regarding these Terms of Service, please contact us:
+          </p>
+          <div class="glass-panel p-6 rounded-2xl border border-white/5 space-y-2 text-xs">
+            <p><strong>Email</strong>: <a href="mailto:youtubeplaylistfinder100@gmail.com" class="text-accent hover:underline">youtubeplaylistfinder100@gmail.com</a></p>
+            <p><strong>Website</strong>: <a href="https://youtubeplaylistfinder.com" class="text-accent hover:underline">https://youtubeplaylistfinder.com</a></p>
+          </div>
+        </section>
+
+      </div>
+    </article>
+  </div>
+</Layout>
+
+<script>
+  // Scroll Progress Indicator
+  const scrollBar = document.getElementById('scroll-bar');
+  window.addEventListener('scroll', () => {
+    const totalScroll = document.documentElement.scrollHeight - window.innerHeight;
+    if (totalScroll > 0) {
+      const percentage = (window.scrollY / totalScroll) * 100;
+      if (scrollBar) scrollBar.style.width = `${percentage}%`;
+    }
+  });
+
+  // Table of Contents Active link highlighter
+  const sections = document.querySelectorAll('section[id]');
+  const tocLinks = document.querySelectorAll('aside nav a');
+
+  window.addEventListener('scroll', () => {
+    let current = '';
+    const scrollPos = window.scrollY + 120; // Offset for stickiness
+
+    sections.forEach((section) => {
+      const top = (section as HTMLElement).offsetTop;
+      const height = (section as HTMLElement).offsetHeight;
+      if (scrollPos >= top && scrollPos < top + height) {
+        current = section.getAttribute('id') || '';
+      }
+    });
+
+    tocLinks.forEach((link) => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === `#${current}`) {
+        link.classList.add('active');
+      }
+    });
+  });
+</script>
+
+<style>
+  html {
+    scroll-behavior: smooth;
+  }
+  /* Custom Active styling matching theme */
+  .active {
+    color: var(--color-accent, #ffffff) !important;
+    border-color: var(--color-accent, #3b82f6) !important;
+    background-color: rgba(255, 255, 255, 0.02);
+  }
+</style>

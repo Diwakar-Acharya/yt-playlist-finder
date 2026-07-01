@@ -371,4 +371,40 @@ const faqSchema = {
     </div>
   )}
 
+  <!-- Powered by YouTube Data API Disclosure Section -->
+  <section class="border-t border-white/5 pt-16 pb-8 mt-16 max-w-5xl mx-auto text-center space-y-6">
+    <div class="flex flex-col items-center justify-center gap-3">
+      <!-- YouTube Logo SVG according to official guidelines -->
+      <div class="flex items-center gap-2">
+        <svg class="w-10 h-7 text-[#FF0000]" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.518 3.5 12 3.5 12 3.5s-7.518 0-9.388.553a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.87.553 9.388.553 9.388.553s7.518 0 9.388-.553a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837z" />
+          <polygon points="9.545 15.568 15.818 12 9.545 8.432" fill="white" />
+        </svg>
+        <span class="font-bold tracking-tight text-white font-mono uppercase text-xs">Powered by YouTube Data API</span>
+      </div>
+    </div>
+    
+    <div class="max-w-2xl mx-auto space-y-4">
+      <p class="text-xs text-text-secondary leading-relaxed">
+        This website uses YouTube Data API Services to help users discover, search, and analyze public study playlists on YouTube. By using this service, you acknowledge that you agree to be bound by the YouTube Terms of Service and Google Privacy Policy.
+      </p>
+      
+      <div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[10px] font-mono text-text-muted">
+        <a href="/privacy" class="hover:text-white underline">Privacy Policy</a>
+        <span>•</span>
+        <a href="/terms" class="hover:text-white underline">Terms of Service</a>
+        <span>•</span>
+        <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" class="hover:text-white underline">Google Privacy Policy</a>
+        <span>•</span>
+        <a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer" class="hover:text-white underline">YouTube Terms of Service</a>
+        <span>•</span>
+        <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" class="hover:text-white underline">Google API User Data Policy</a>
+      </div>
+    </div>
+    
+    <div class="text-[9px] font-mono text-text-muted">
+      "This application is not affiliated with, endorsed by, sponsored by, or certified by Google LLC or YouTube."
+    </div>
+  </section>
+
 </Layout>

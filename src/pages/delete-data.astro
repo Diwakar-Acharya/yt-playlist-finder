@@ -1,0 +1,100 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { Trash2, Mail } from '@lucide/astro';
+
+const breadcrumbs = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://youtubeplaylistfinder.com/" },
+    { "@type": "ListItem", "position": 2, "name": "Delete Data", "item": "https://youtubeplaylistfinder.com/delete-data" }
+  ]
+};
+---
+
+<Layout 
+  title="Delete Data Request | youtubeplaylistfinder"
+  description="Request the deletion of your local study metrics and cached preferences from our platform. Understand our user rights policies."
+  canonical="https://youtubeplaylistfinder.com/delete-data"
+  schema={breadcrumbs}
+>
+  <div class="max-w-3xl mx-auto space-y-8 text-left leading-relaxed my-12">
+    <section class="border-b border-white/5 pb-6">
+      <span class="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold">User Data Rights</span>
+      <h1 class="text-3xl md:text-4xl font-extrabold tracking-tight text-white mt-1">Data Deletion Request</h1>
+      <p class="text-xs text-text-secondary mt-1">Manage and request deletion of stored platform metrics.</p>
+    </section>
+
+    <div class="glass-panel p-8 rounded-3xl border border-white/5 bg-zinc-950/20 backdrop-blur-md space-y-6">
+      <p class="text-sm text-text-secondary">
+        At youtubeplaylistfinder.com, we prioritize user privacy. In alignment with data protection regulations (including GDPR and CCPA) and Google API Services requirements, we provide simple ways for users to inspect, clear, and request the complete erasure of any information related to their platform usage.
+      </p>
+
+      <div class="space-y-4">
+        <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono">1. Local Browser Caches (Instant Deletion)</h3>
+        <p class="text-xs text-text-secondary">
+          We process and save metrics such as completed study checkboxes, saved playlists, study streaks, and comparison history directly inside your browser's local store (`localStorage`). We do not upload these parameters to our servers.
+        </p>
+        <p class="text-xs text-text-secondary">
+          You can wipe this data immediately at any time by clicking below or by clearing your browser's history and site storage.
+        </p>
+        <button 
+          id="clear-local-btn" 
+          class="flex items-center gap-2 px-4 py-2 text-xs font-mono font-semibold rounded-xl bg-red-500/10 hover:bg-red-500/25 border border-red-500/20 hover:border-red-500/40 text-red-400 hover:text-red-300 transition-all cursor-pointer"
+        >
+          <Trash2 class="w-4 h-4" /> Clear Local Progress & Storage
+        </button>
+        <p id="local-status" class="text-[10px] text-emerald-400 font-mono hidden">✓ Local storage cleared successfully.</p>
+      </div>
+
+      <div class="space-y-4 border-t border-white/5 pt-6">
+        <h3 class="text-sm font-bold text-white uppercase tracking-wider font-mono">2. Server Logs & Cached Queries (Request Deletion)</h3>
+        <p class="text-xs text-text-secondary">
+          To query playlists via the YouTube Data API, search terms are matched and temporarily cached in memory or secure session stores to avoid exceeding quotas. If you would like us to audit and purge your IP log files or cached query records manually, please click below to submit a deletion request.
+        </p>
+        
+        <div class="pt-2">
+          <a 
+            href="mailto:youtubeplaylistfinder100@gmail.com?subject=Data%20Deletion%20Request&body=Hello,%20I%20would%20like%20to%20request%20the%20complete%20deletion%20of%20all%20cached%20data%20and%20server%20logs%20linked%20to%20my%20usage%20at%20youtubeplaylistfinder.com."
+            class="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white hover:bg-zinc-200 text-black text-xs font-semibold shadow-lg hover:scale-95 active:scale-95 transition-all cursor-pointer"
+          >
+            <Mail class="w-4 h-4" /> Request Data Deletion via Email
+          </a>
+        </div>
+      </div>
+
+      <!-- Compliance Statement -->
+      <div class="border-t border-white/5 pt-6 space-y-2 text-[10px] font-mono text-text-muted">
+        <p>
+          "This application uses YouTube API Services."
+        </p>
+        <p>
+          "This application is not affiliated with, endorsed by, sponsored by, or certified by Google LLC or YouTube."
+        </p>
+        <p>
+          "Requests are typically processed within 24 to 72 hours. For further inquiries, contact support at youtubeplaylistfinder100@gmail.com."
+        </p>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<script>
+  const clearBtn = document.getElementById('clear-local-btn');
+  const statusMsg = document.getElementById('local-status');
+
+  if (clearBtn && statusMsg) {
+    clearBtn.addEventListener('click', () => {
+      try {
+        localStorage.clear();
+        statusMsg.classList.remove('hidden');
+        statusMsg.style.display = 'block';
+        setTimeout(() => {
+          statusMsg.style.display = 'none';
+        }, 4000);
+      } catch (err) {
+        console.error('Failed to clear localStorage:', err);
+      }
+    });
+  }
+</script>
