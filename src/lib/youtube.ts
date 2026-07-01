@@ -296,8 +296,12 @@ export async function searchYouTubePlaylists(query: string, apiKey: string, env?
       const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&type=playlist&maxResults=50&q=${encodeURIComponent(query)}&key=${apiKey}`;
       const res = await fetch(url);
       if (!res.ok) {
-        const errText = await res.text();
-        console.error('YouTube Data API Search failed:', res.status, errText);
+        // If quota exceeded, signal to caller to use scraper fallback (don't log - triggers logger crash)
+        if (res.status === 429 || res.status === 403) {
+          const quotaErr = new Error('YouTube API quota exhausted');
+          (quotaErr as any).isQuotaError = true;
+          throw quotaErr;
+        }
         return [];
       }
       const data = await res.json();
@@ -320,8 +324,10 @@ export async function searchYouTubePlaylists(query: string, apiKey: string, env?
           console.warn('Failed to write query search cache to KV (possibly quota exceeded):', cacheErr);
         }
       }
-    } catch (err) {
-      console.error('YouTube API Search Request failed:', err);
+    } catch (err: any) {
+      // Re-throw quota/auth errors so the caller can use scraper fallback
+      if (err?.isQuotaError) throw err;
+      console.log('YouTube API Search Request failed:', err);
       return [];
     }
   }
@@ -350,7 +356,7 @@ export async function searchYouTubePlaylists(query: string, apiKey: string, env?
   if (finalIds.length === 0) return [];
 
   // Batch query details to validate and construct the full Playlist objects
-  const detailsMap = await getPlaylistDetailsBatch(finalIds, apiKey);
+  const detailsMap = await getPlaylistDetailsBatch(finalIds, apiKey, env);
   const results: Playlist[] = [];
   const cachePromises: Promise<any>[] = [];
 

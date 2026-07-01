@@ -1,7 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
-import node from '@astrojs/node';
 
 import cloudflare from '@astrojs/cloudflare';
 
@@ -11,5 +10,11 @@ export default defineConfig({
   adapter: cloudflare(),
   vite: {
     plugins: [tailwindcss()],
+    define: {
+      // Shim process for Cloudflare Workers runtime (no Node.js globals)
+      'process.env': '({})',
+      'process.stdout': '({ write: function(){} })',
+      'process.stderr': '({ write: function(){} })',
+    },
   },
 });

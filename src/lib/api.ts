@@ -65,17 +65,31 @@ export async function searchPlaylists(
       staticPlaylists.push(...staticMatches);
     }
 
-    // 2. Fetch live YouTube Data API playlists
+    // 2. Fetch live YouTube Data API playlists (or use scraper as fallback)
     let ytResults: Playlist[] = [];
     if (apiKey) {
-      ytResults = await searchYouTubePlaylists(q, apiKey, env);
+      try {
+        ytResults = await searchYouTubePlaylists(q, apiKey, env);
+      } catch (err: any) {
+        if (err?.isQuotaError) {
+          // Quota exhausted — fall back to scraper
+          console.log('[INFO] YouTube API quota exhausted. Falling back to scraper for query:', q);
+          try {
+            ytResults = await scrapeYouTubePlaylists(q);
+            console.log(`[DEBUG] Scraper returned ${ytResults.length} results for "${q}"`);
+          } catch (scrapeErr) {
+            // Scraper failed too - will use static fallback
+          }
+        }
+        // Other errors: will use static fallback
+      }
     } else {
       // No API key – try direct scraper fallback
       try {
         ytResults = await scrapeYouTubePlaylists(q);
         console.log(`[DEBUG] Scraper returned ${ytResults.length} results for "${q}"`);
       } catch (err) {
-        console.error('scrapeYouTubePlaylists failed:', err);
+        // Scraper failed - will use static fallback
       }
     }
 
@@ -89,16 +103,30 @@ export async function searchPlaylists(
     });
 
     if (results.length === 0) {
-      console.log('[DEBUG] 0 results found (possibly due to API quota or no match). Falling back to popular static templates.');
+      console.log('[DEBUG] 0 results found (possibly due to API quota or no match). Trying query-matched static fallback first.');
+      
+      // First, try to find static playlists that match the query
+      const queryMatchedStatics = PLAYLISTS.filter(p =>
+        p.title.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.channel.toLowerCase().includes(q) ||
+        p.topics.some(t => t.toLowerCase().includes(q))
+      );
+
+      const fallbackBase = queryMatchedStatics.length > 0 ? queryMatchedStatics : PLAYLISTS;
+      const isQueryMatch = queryMatchedStatics.length > 0;
+
       if (apiKey) {
-        const staticIds = Object.values(STATIC_SLUG_MAP);
+        const fallbackIds = fallbackBase.map(p => STATIC_SLUG_MAP[p.slug]).filter(Boolean);
         let detailsMap: Record<string, any> = {};
         try {
-          detailsMap = await getPlaylistDetailsBatch(staticIds, apiKey, env);
+          if (fallbackIds.length > 0) {
+            detailsMap = await getPlaylistDetailsBatch(fallbackIds, apiKey, env);
+          }
         } catch (e) {
           console.error('Failed to resolve static templates details on search fallback:', e);
         }
-        results = PLAYLISTS.map(p => {
+        results = fallbackBase.map(p => {
           const ytId = STATIC_SLUG_MAP[p.slug];
           const ytDetails = detailsMap[ytId];
           return {
@@ -108,11 +136,11 @@ export async function searchPlaylists(
             thumbnail: ytDetails?.thumbnail_url || p.thumbnail,
             videoCount: ytDetails?.videoCount || p.videoCount,
             durationHours: ytDetails ? Math.round(ytDetails.videoCount * 0.4) || 2 : p.durationHours,
-            isFallback: true
+            isFallback: !isQueryMatch
           };
         });
       } else {
-        results = PLAYLISTS.map(p => ({ ...p, isFallback: true }));
+        results = fallbackBase.map(p => ({ ...p, isFallback: !isQueryMatch }));
       }
     }
   } else {

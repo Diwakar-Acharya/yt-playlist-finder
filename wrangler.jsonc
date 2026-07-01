@@ -10,5 +10,8 @@
 	},
 	"observability": {
 		"enabled": true
+	},
+	"vars": {
+		"YOUTUBE_API_KEY": "AIzaSyB261HAJPp_jBkY25AcKev5RoqcFhv6heg"
 	}
 }
